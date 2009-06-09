@@ -1,10 +1,20 @@
 /**
  * @namespace   Jet
  * @author      Micheil Smith   micheil@yettobebranded.net
+ *
+ * @todo        Implement Lazy Loader
+ * @todo        Write more test cases, using third party test runner.
+ * @todo        Write up the examples for how to use it, and what it does.
  **/
 
 ;(function(){
     
+    /**
+     * A Simple way to access jet methods using namespacing.
+     * @argument    ns     string|object    A valid namespace for Jet, eg, "Jet.Namespace"
+     * @argument    *      mixed            All other arguments are passed on to the resolved Namespace if it is a function.
+     * @returns            mixed            The resultant of the namespace. If the namespace resolves to a function, the function will be executed.
+     **/
     this.j = function(ns){
         var jns = Jet.Namespace(ns);
         if(typeof jns == 'function'){
@@ -23,6 +33,40 @@
      * @namespace Jet
      **/
     var Jet = this.Jet = (this.Jet ? this.Jet : {
+        /**
+         * A Simple Versioning Storage. Stolen from Dojo, with modifications.
+         **/
+	version: {
+            //	major: Integer
+            //		Major version. If total version is "1.2.0beta1", will be 1
+            major: 0,
+            
+            //	minor: Integer
+            //		Minor version. If total version is "1.2.0beta1", will be 2
+            minor: 1,
+            
+            //	patch: Integer
+            //		Patch version. If total version is "1.2.0beta1", will be 0
+            patch: 2,
+            
+            //	flag: String
+            //		Descriptor flag. If total version is "1.2.0beta1", will be "beta1"
+            flag: "beta",
+            
+            //	revision: Number
+            //		The SVN rev from which dojo was pulled
+            revision: (function(){
+                var rev = "$Rev: 7 $".match(/\d+/);
+                return rev ? +rev[0] : NaN;
+            })(),
+            
+            toString: function(){
+                with(this){
+                    return major + "." + minor + "." + patch + flag + " (" + revision + ")";	// String
+                }
+            }
+	},
+        
         _namespaces: {},
         _packages: [],
 
@@ -58,7 +102,9 @@
         
         /**
          * Copies items in Source into Target
-         * @todo Document Further.
+         * @argument    source  object  What to copy from.
+         * @argument    target  object  What to copy into. (optional, default: Jet/this)
+         * @returns             object  The new object formed by copying source into target.
          **/
         Extend: function(source){
             var target = this;
@@ -73,9 +119,8 @@
                     /*if(typeof source[name] == 'object'){
                         target[name] = {};
                         this.Extend(target[name], source[name]);
-                    } else {*/
+                    } */
                         target[name] = source[name];
-                    //}
                 }
             }
             return target;
@@ -102,6 +147,12 @@
             return this;
         },
         
+        /**
+         * Check if a named package is loaded.
+         * @throws  Error   If package isn't found, throws an error to stop script execution.
+         * 
+         * @todo            Try to make this actually __autoload the package, will require lazyloader.
+         **/
         Require: function(PackageName){
             if(!this._packages[PackageName]){
                 throw new Error("Required Package '"+PackageName+"' not loaded."); 
@@ -116,33 +167,26 @@
      * @namespace Jet
      **/
     Jet.Extend({
-        _topics: {
-            'test:test*': [
-                // this fires on test:test:test and test:test:a etc.
-                function(){
-                    console.log('tam? ', arguments);
-                }
-            ],
-            'test:test:*': [
-                // this fires on test:test:test and test:test:a etc.
-                function(){
-                    console.log('tame ', arguments);
-                }
-            ],
-            'test:test:test': [
-                function(msg){
-                    console.log('wild ', arguments);
-                }
-            ]
-        },
+        _topics: {},
         
-        _dispatcher: function(t, args){
-            var topic = this._topics[t];
-            for(var f=0, tl=topic.length; f<tl; ++f){
-                topic[f].apply(this, args);
+        /**
+         * A simpler way to execute all associated functions
+         * @argument    topic   string  The topic to pull functions from.
+         * @argument    args    array   Arguments to pass into the function when it is called.
+         * @private
+         **/
+        _dispatcher: function(topic, args){
+            var fns = this._topics[topic];
+            for(var f=0, tl=fns.length; f<tl; ++f){
+                fns[f].apply(this, args);
             }
         },
         
+        /**
+         * Publishes Args to all subscribers on Topic
+         * @argument    topic   string   What publish to, can include a wildcard ( * ) at the end. Eg: "a:b:c:*" would work for both `a:b:c:d` and `a:b:c:z`.
+         * @argument    args    array|string    What to sent to the Subscribers.
+         **/
         publish: function(topic, args){
             if(Object.prototype.toString.call(args) !== '[object Array]'){
                 args = [args];
@@ -158,7 +202,13 @@
             
             return this;
         },
+        
         /**
+         * Subscribes to a topic.
+         * @argument    topic   string      The topic to bind the method to.
+         * @argument    method  function    The function to call when topic is published to.
+         * @returns             array       A handle to later unsubscribe the method from the topic.
+         * 
          * @todo Add Context.
          **/
         subscribe: function(topic, method /*, context*/){
@@ -169,6 +219,11 @@
             
             return [topic, this._topics[topic].length];
         },
+        
+        /**
+         * Removes a method from a topic.
+         * @argument    handle  array   A predefined handle, usually given from Jet.subscribe, but can look like ['test:test:*', 0], which will remove the first method from the 'test:test:*' topic.
+         **/
         unsubscribe: function(handle){
             if(this._topics[handle[0]]){
                 if(this._topics[handle[0]][handle[1]]){
