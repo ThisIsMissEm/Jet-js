@@ -15,7 +15,7 @@
      * @argument    *      mixed            All other arguments are passed on to the resolved Namespace if it is a function.
      * @returns            mixed            The resultant of the namespace. If the namespace resolves to a function, the function will be executed.
      **/
-    this.j = function(ns){
+    var j = this.j = (this.j ? this.j : function(ns){
         var jns = Jet.Namespace(ns);
         if(typeof jns == 'function'){
             var args = [];
@@ -26,7 +26,7 @@
         } else {
             return jns;
         }
-    };
+    });
     
     /**
      * @class   Jet
@@ -34,49 +34,82 @@
      **/
     var Jet = this.Jet = (this.Jet ? this.Jet : {
         /**
-         * A Simple Versioning Storage. Stolen from Dojo, with modifications.
+         * Set this to true when using in a Production environment, useful for debugging.
+         **/
+        Production: false,
+        
+        /**
+         * A Simple Versioning Storage. This shouldn't be changed, except by a core contributor.
          **/
 	version: {
-            //	major: Integer
-            //		Major version. If total version is "1.2.0beta1", will be 1
-            major: 0,
-            
-            //	minor: Integer
-            //		Minor version. If total version is "1.2.0beta1", will be 2
-            minor: 1,
-            
-            //	patch: Integer
-            //		Patch version. If total version is "1.2.0beta1", will be 0
-            patch: 2,
-            
-            //	flag: String
-            //		Descriptor flag. If total version is "1.2.0beta1", will be "beta1"
-            flag: "beta",
-            
-            //	revision: Number
-            //		The SVN rev from which dojo was pulled
-            revision: (function(){
-                var rev = "$Rev: 7 $".match(/\d+/);
+            release: 1,             //  The release, eg, in 1.5.6beta, this would be 1.
+            major: 3,               //  The major release, eg, in 1.5.6beta, this would be 5.
+            minor: 0,               //  The minor release, eg, in 1.5.6beta, this would be 6.
+            flag: "beta",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
+            revision: (function(){  //  The svn/git revision getter.
+                var rev = "$Rev: 11 $".match(/\d+/);
                 return rev ? +rev[0] : NaN;
             })(),
             
+            /**
+             * Check if the current Jet version is supplied version.
+             * @argument    version     string      The version to check against, currently the version is "1.3.0beta".
+             * @returns                 boolean     The current version is the supplied version.
+             **/
+            is: function(version){
+                return (version === (this.release + "." + this.major + "." + this.minor + this.flag));
+            },
+            
             toString: function(){
                 with(this){
-                    return major + "." + minor + "." + patch + flag + " (" + revision + ")";	// String
+                    return release + "." + major + "." + minor + flag + " (rev " + revision + ")";
                 }
             }
 	},
         
+        // Storage Variables:
         _namespaces: {},
         _packages: [],
-
+        
+        /**
+         * Kills a script from continue to be processed. Useful in loops, as well as in dependency based functions.
+         * @argument 
+         **/
+        Die: function(msg){
+            throw new Error((arguments.length > 0 ? msg : 'Died on Command')); 
+        },
+        
+        /**
+         * Copies items in Source into Target
+         * @argument    source  object  What to copy from.
+         * @argument    target  object  What to copy into. (optional, default: Jet/this)
+         * @returns             object  The new object formed by copying source into target.
+         **/
+        Extend: function(target, source){
+            if(arguments.length == 1){
+                source = target;
+                target = this;
+            }
+            
+            for(var name in source){
+                if(target[name] === undefined){
+                    /*if(typeof source[name] == 'object'){
+                        target[name] = {};
+                        this.Extend(target[name], source[name]);
+                    } */
+                    target[name] = source[name];
+                }
+            }
+            return target;
+        },
+        
         /**
          * Find an array index using string based notation
          * @argument   ns       string      The notation
          * @argument   scope    object      The scope of which we'd like to look within. (optional)
          * @returns             object      The final index within the array; array[index];
          **/
-        Namespace: function(ns)
+        Namespace: function(ns, scope, separator)
         {
             if(typeof ns === 'object'){
                 return ns;
@@ -84,12 +117,15 @@
             
             if(this._namespaces[ns] !== undefined)
                 return this._namespaces[ns];
-
-            var scope = (arguments[1] && typeof arguments[1] === 'object') ? arguments[1] : window;
             
-            var separator = (typeof arguments[1] === 'string') ?
-                                arguments[1] : (typeof arguments[2] === 'string') ?
-                                    arguments[2] : '.';
+            scope = scope || window;
+            
+            if(typeof scope === 'string'){
+                separator = scope;
+                scope = window;
+            } else {
+                separator = separator || '.';
+            }
             
             var nodes = ns.split(separator),
                 n = null;
@@ -101,49 +137,21 @@
         },
         
         /**
-         * Copies items in Source into Target
-         * @argument    source  object  What to copy from.
-         * @argument    target  object  What to copy into. (optional, default: Jet/this)
-         * @returns             object  The new object formed by copying source into target.
-         **/
-        Extend: function(source){
-            var target = this;
-            
-            if(arguments.length > 1){
-                target = arguments[0];
-                source = arguments[1];
-            }
-            
-            for(var name in source){
-                if(target[name] === undefined){
-                    /*if(typeof source[name] == 'object'){
-                        target[name] = {};
-                        this.Extend(target[name], source[name]);
-                    } */
-                        target[name] = source[name];
-                }
-            }
-            return target;
-        },
-        
-        /**
          * Create a new package, or extend an existing one.
          * @argument   namespace   mixed    The namespace to use for this package.
          * @argument   methods     object   The methods to add to our package.
-         * @argument   scope       mixed    The namespace to use as a parent scope. (optional)
          * @returns                object   The new package.
          **/
-        Package: function()
+        Package: function(namespace, methods)
         {
-            var namespace = ((typeof arguments[0] == 'string' || arguments.length > 1) ? arguments[0] : 'Jet');
-
-            var methods = (typeof arguments[0] == 'object' && arguments.length == 1 ? arguments[0] :
-                (arguments.length > 1 && typeof arguments[1] == 'object' ? arguments[1] : {}));
-            
+            namespace = namespace || 'Jet';
+            methods = methods || {};
+            if(arguments.length == 1 && name){
+                methods = namespace;
+                namespace = 'Jet';
+            }
             this.Extend(this.Namespace(namespace, window), methods);
-            
             this._packages.push(namespace);
-            
             return this;
         },
         
@@ -160,11 +168,37 @@
         }
     });
     
+    /**
+     * Extends Jet to provide access to Console.
+     * @class       Console
+     * @extends     Jet
+     * @namespace   Jet.Console
+     *
+     * @todo        Possibly write in a custom error console, similar to Firebug Lite.
+     **/
+    Jet.Package('Jet.Console', {
+        log: function(){
+            if( ! Jet.Production && typeof console === 'object' && console['log']){
+                console.log(Array.prototype.join.call(arguments, ' '));
+            }
+        },
+        warn: function(){
+            if( ! Jet.Production && typeof console === 'object' && console['warn']){
+                console.warn(Array.prototype.join.call(arguments, ' '));
+            }
+        },
+        error: function(){
+            if( ! Jet.Production && typeof console === 'object' && console['error']){
+                console.error(Array.prototype.join.call(arguments, ' '));
+            }
+        }
+    });
     
     /**
      * Extends Jet to give a Publisher/Subscriber model.
-     * @extends Jet
-     * @namespace Jet
+     * @class       Jet
+     * @extends     Jet
+     * @namespace   Jet
      **/
     Jet.Extend({
         _topics: {},
@@ -237,9 +271,9 @@
     /**
      * Extends Jet to cover a few missing things in JavaScript
      * 
-     * @class   Lang
-     * @extends Jet
-     * @namespace Jet.Land
+     * @class       Lang
+     * @extends     Jet
+     * @namespace   Jet.Land
      **/
     Jet.Package('Jet.Lang', {
         
@@ -346,9 +380,9 @@
     /**
      * Extends Jet to provide a Simple Profiler
      * 
-     * @class   Profiler
-     * @extends Jet
-     * @namespace Jet.Profiler
+     * @class       Profiler
+     * @extends     Jet
+     * @namespace   Jet.Profiler
      **/
     Jet.Package('Jet.Profiler', {
         
@@ -358,15 +392,36 @@
          * @argument    iterations  int         The number of times to run the function
          * @argument    description string      The description of the profiler (optional)
          **/
-        run: function (job, iterations) {
-            var description = arguments.length > 2 ? arguments[2] : job.toString();
+        "do": function (job, iterations, description) {
+            description = description || job.toString();
+            
             var start = new Date();
             for(var i = 0; i < iterations; ++i) {
                 job.call(window, i);
             }
             var end   = new Date();
-            console.log("Profiler: " +iterations + " iterations of " + description + " took " + (end.getTime() - start.getTime()) + " milliseconds.");
             return (end.getTime() - start.getTime());
+        },
+        
+        /**
+         * Runs through a series of profiles.
+         * @argument    profiles    object  A correct object for Jet Profiler.
+         * @see                     Profiling/Jet.Profiler.syntax.obj.js
+         **/
+        run: function(profiles, callback){
+            var profiler = this;
+            for(var profile in profiles){
+                profiles[profile].time = (function(profile){
+                    if(typeof profile.does === 'function'){
+                        return profiler.do(profile.does, profile.count ? profile.count : 100);
+                    }
+                    return -1;
+                })(profiles[profile]);
+            }
+            if(typeof callback === 'function'){
+                callback.call(null, profiles);
+            }
+            return profiles;
         }
     });
     
@@ -374,50 +429,20 @@
     /**
      * Extends Jet to provide a simple Test Suite.
      * 
-     * @class   Test
-     * @extends Jet
-     * @namespace Jet.Test
+     * @class       Test
+     * @extends     Jet
+     * @namespace   Jet.Test
      **/
     Jet.Package('Jet.Test', {
-        /**
-         * Logs a message to the console
-         * @private
-         **/
+        
         _log: function(is, description){
-            console[is ? 'warn' : 'error']((is ? 'Passed: ' : 'Failed: ') + description);
-        },
-        
-        /**
-         * Is a given condition true?
-         * @argument    actual      mixed   The actual value to test.
-         * @argument    unexpected  mixed   The unexpected value.
-         * @argument    description string  A short message that defines what the test does.
-         **/
-        not: function(actual, unexpected, description){
-            if(typeof actual === 'object'){
-                this._log(!Jet.Lang.Object.equal(actual, unexpected), description);
+            if(is){
+                Jet.Console.log("Test Passed: ", description);
+                return true;
             } else {
-                this._log(actual != unexpected, description);
+                Jet.Console.error("Test Failed: ", description);
+                return false;
             }
-        },
-        
-        /**
-         * Is a given condition true?
-         * @argument    actual      mixed   The actual value to test.
-         * @argument    unexpected  mixed   The unexpected type of value.
-         * @argument    description string  A short message that defines what the test does.
-         **/
-        notType: function(actual, unexpected, description){
-            this._log(typeof actual !== unexpected, description);
-        },
-        
-        /**
-         * Is a given condition true?
-         * @argument    condition   boolean The condition we are testing.
-         * @argument    description string  A short message that defines what the test does.
-         **/
-        ok: function(condition, description){
-            this._log(condition === true, description);
         },
         
         /**
@@ -427,10 +452,11 @@
          * @argument    description string  A short message that defines what the test does.
          **/
         is: function(actual, expected, description){
+            description = description || 'Test';
             if(typeof actual === 'object'){
-                this._log(Jet.Lang.Object.equal(actual, expected), description);
+                return this._log((Jet.Lang.Object.equal(actual, expected)), description);
             } else {
-                this._log(actual == expected, description);
+                return this._log((actual == expected), description);
             }
         },
         
@@ -441,7 +467,70 @@
          * @argument    description string  A short message that defines what the test does.
          **/
         isType: function(actual, expected, description){
-            this._log(typeof actual === expected, description);
+            description = description || 'Test';
+            return this._log((typeof actual === expected), description);
+        },
+        
+        /**
+         * Is a given condition true?
+         * @argument    actual      mixed   The actual value to test.
+         * @argument    unexpected  mixed   The unexpected value.
+         * @argument    description string  A short message that defines what the test does.
+         **/
+        not: function(actual, unexpected, description){
+            description = description || 'Test';
+            if(typeof actual === 'object'){
+                return this._log(( ! Jet.Lang.Object.equal(actual, unexpected)), description);
+            } else {
+                return this._log((actual != unexpected), description);
+            }
+        },
+        
+        /**
+         * Is a given condition true?
+         * @argument    actual      mixed   The actual value to test.
+         * @argument    unexpected  mixed   The unexpected type of value.
+         * @argument    description string  A short message that defines what the test does.
+         **/
+        notType: function(actual, unexpected, description){
+            description = description || 'Test';
+            return this._log((typeof actual !== unexpected), description);
+        },
+        
+        /**
+         * Is a given condition true?
+         * @argument    condition   boolean The condition we are testing.
+         * @argument    description string  A short message that defines what the test does.
+         **/
+        ok: function(condition, description){
+            description = description || 'Test';
+            return this._log(condition === true, description);
+        },
+        
+        run: function(tests){
+            var tester = this;
+            for(var test in tests){
+                (function(test, description){
+                    test = Jet.Extend( test, {
+                        arguments: [],
+                        content: window,
+                        expected: null,
+                        actual: null,
+                        ok: false,
+                        does: null
+                    });
+                    
+                    if(typeof test.does === 'function'){
+                        test.actual = test.does.apply(test.context, test.arguments);
+                        test.ok = tester.is(test.expected, test.actual, description);
+                    }
+                })(tests[test], test);
+            }
+            
+            if(typeof callback === 'function'){
+                callback.call(null, tests);
+            }
+            return tests;
         }
     });
     
