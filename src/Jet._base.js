@@ -13,7 +13,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         minor: 5,               //  The minor release, eg, in 1.5.6beta, this would be 6.
         flag: "beta",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         revision: (function(){  //  The svn/git revision getter.
-            var rev = "$Rev: 12 $".match(/\d+/);
+            var rev = "Rev: $id$".match(/\d+/);
             return rev ? +rev[0] : NaN;
         })(),
         
