@@ -1,0 +1,12 @@
+== Road Map ==
+
+This document outlines the objectives of each release of Jet.
+
+1.3:
+    First public release, contains basic functionality.
+
+1.4:
+    Restructured API
+
+1.5:
+    Jet.Require now autoloads files.
