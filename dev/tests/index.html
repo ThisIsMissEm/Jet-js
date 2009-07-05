@@ -2,11 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>Welcome to Jet!</title>
-	<script type="text/javascript" src="http://localhost/www/turning/Jet/src/Jet._base.js"></script>
-<script type="text/javascript" src="../../src/Jet.Event.js"></script>
+	<script type="text/javascript" src="../../src/Jet._base.js"></script>
 	<!--<script type="text/javascript" src="../../dist/Jet.js"></script>-->
 
-<!--    <script type="text/javascript" src="../src/Jet.Test.js"></script>-->
+    <script type="text/javascript">
+    	Jet.Require('Jet.Event');
+    </script>
 <!--    <script type="text/javascript">
 Jet.Test.module('Jet._base').test({
     expect: 5,

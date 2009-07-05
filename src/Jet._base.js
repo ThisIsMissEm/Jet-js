@@ -64,6 +64,12 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         return result;
     })(),
     
+    Root: (function(){
+        return document.getElementsByTagName('head')[0];
+    })(),
+    
+    
+    
     Extend: function(target, source){
         if(source === undefined){
             source = target;
@@ -218,69 +224,69 @@ function loadScript(url, callback){
     
     Require: function(name, callback){
     // Mustn't already exist.
-        if(name !== undefined){
-            if( ! this.inArray(name, this.Packages)){
-                var uri = this.BasePath + name + (this.Production ? '.min.js' : '.js');
-                if( ! this.inArray(uri, this.LoadedURIs)){
-                
-                // ***********************************************************************
-                // START XHR METHOD
-                // ***********************************************************************
-                    //console.time('JetLoader');
-                    
-                    // We should be able to assume MSXML isn't to be used, due to a detection on browser environment previously.
-                    var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
-                
-                    http.open('GET', uri, false);
-                    http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                    http.setRequestHeader("Accept", "application/javascript,text/javascript");
-                
-                    try {
-                        http.send(null);
-                        if((http.status >= 200 && http.status < 300) || http.status == 304){
-                            try{
-                                this.exec(";(function(Jet){"+http.responseText+"})(Jet);");
-                                if(arguments.length > 1 && typeof callback === 'function')
-                                    callback.call(this.Namespace(name, window), null);
-                            } catch(e){
-                                this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
-                            }
-                            this.LoadedURIs.push(uri);
+        if(arguments.length === 0) return; 
+        
+        if( ! this.inArray(name, this.Packages)){
+            var uri = this.BasePath + name + (this.Production ? '.min.js' : '.js');
+            if( ! this.inArray(uri, this.LoadedURIs)){
+            
+/**
+* No need, we can just use <script> tags.
+
+                var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+            
+                http.open('GET', uri, false);
+                http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                http.setRequestHeader("Accept", "application/javascript,text/javascript");
+            
+                try {
+                    http.send(null);
+                    if((http.status >= 200 && http.status < 300) || http.status == 304){
+                        try{
+                            this.exec(";(function(Jet){"+http.responseText+"})(Jet);");
+                            if(arguments.length > 1 && typeof callback === 'function')
+                                callback.call(this.Namespace(name, window), null);
+                        } catch(e){
+                            this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
                         }
-                    } catch(e){
-                        this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+                        this.LoadedURIs.push(uri);
                     }
-                    /* This is the alternative method
-                    var script = document.createElement("script");
-                    script.type = "text/javascript";
-                    if (script.readyState){  //IE
-                        script.onreadystatechange = function(){
-                            if (script.readyState == "loaded" || script.readyState == "complete"){
-                                script.onreadystatechange = null;
-                                if(arguments.length > 1 && typeof callback === 'function')
-                                    callback.call(this.Namespace(name, window), null);
-                                Jet.LoadedURIs.push(uri);
-                            }
-                        };
-                    } else {  //Others
-                        script.onload = function(){
-                                if(arguments.length > 1 && typeof callback === 'function')
-                                    callback.call(this.Namespace(name, window), null);
-                                Jet.LoadedURIs.push(uri);
-                        };
-                    }
-                    script.src = uri;
-                    (document.getElementsByTagName('head')[0] || document.documentElement).appendChild(script);
-                    console.timeEnd('JetLoader');*/
-                // ***********************************************************************
-                // END XHR METHOD    
-                // ***********************************************************************
-                    
+                } catch(e){
+                    this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
                 }
-            } else {
-                if(arguments.length > 1 && typeof callback === 'function')
-                    callback.call(this.Namespace(name, window), null);
+*/
+
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                if (script.readyState){  //IE
+                    script.onreadystatechange = function(){
+                        if (script.readyState == "loaded" || script.readyState == "complete"){
+                            script.onreadystatechange = null;
+                            if(arguments.length > 1 && typeof callback === 'function')
+                                callback.call(this.Namespace(name, window), null);
+                            Jet.LoadedURIs.push(uri);
+                            Jet.Root.removeChild(script);
+                        }
+                    };
+                } else {  //Others
+                    script.onload = function(){
+                            if(arguments.length > 1 && typeof callback === 'function')
+                                callback.call(this.Namespace(name, window), null);
+                            Jet.LoadedURIs.push(uri);
+                            Jet.Root.removeChild(script);
+                    };
+                }
+                script.src = uri;
+                Jet.Root.appendChild(script);
+                console.timeEnd('JetLoader');
+            // ***********************************************************************
+            // END XHR METHOD    
+            // ***********************************************************************
+                
             }
+        } else {
+            if(arguments.length > 1 && typeof callback === 'function')
+                callback.call(this.Namespace(name, window), null);
         }
     },
     /**
@@ -311,13 +317,42 @@ function loadScript(url, callback){
     },
     
     /**
-     * Better scoping for evals.
+     * Reinventing the Eval()
      **/
-    exec: function(scriptFragment){
-        // TODO:
-        // could I add in a document.createElement and appendage
-        // of textNode  to it for better browser performance?
+    exec: (function(scriptFragment){
+        var useText = true,
+            root    = Jet.Root,
+            script  = document.createElement('script');
+            sid     = 'Jet_script_' + (new Date).getTime();
         
-        return Jet.global.eval ? Jet.global.eval(scriptFragment) : eval(scriptFragment);
-    }
+        script.type = 'text/javscript';
+        
+        try {
+    		script.appendChild( document.createTextNode( "window." + sid + "=1;" ) );
+        } catch (e){}
+
+        root.appendChild(script);
+        root.removeChild(script);
+        if ( window[ sid ] ) {
+            useText = false;
+    		delete window[ sid ];
+	    }
+	    
+        root = script = sid = null;
+        
+        return function(scriptFragment){
+            if(scriptFragment.length === 0) return;
+            var script = document.createElement('script'),
+                root   = Jet.Root;
+            if(!useText){
+                script.appendChild(document.createTextNode(scriptFragment));
+            } else {
+                script.text = scriptFragment;
+            }
+            root.appendChild(script);
+            root.removeChild(script);
+            
+            root = script = useText = null;
+        };
+    })()
 });
