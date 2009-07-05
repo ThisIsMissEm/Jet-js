@@ -25,44 +25,46 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
             }
         }
     },
-
-    BasePath: (function(){
-        var result = document.location.href;
-        if(document && document.getElementsByTagName){
-            var scripts = document.getElementsByTagName("script");
-            var src_regex = /(j|J)et(\._base)?(\.min)?\.js/i;
-            var found = false;
-            
-            for(var i=0, length = scripts.length; i<length; ++i){
-                var src = scripts[i].getAttribute('src');
-                if(!src){
-                    continue;
-                }
-                var match = src.match(src_regex);
-                if(match){
-                    result = src.substring(0, match.index);
-                    break;
-                }
-            }
-        }
-        return result;
-    })(),
-
-    LoadedURIs: (function(){
-        var result = [];
-        if(document && document.getElementsByTagName){
-            var scripts = document.getElementsByTagName("script");
-            for(var i=0, length = scripts.length; i<length; ++i){
-                var src = scripts[i].getAttribute('src');
-                if(!src){
-                    continue;
-                } else {
-                     result.push(src);
+    
+    URI: {
+        Base: (function(){
+            var result = document.location.href;
+            if(document && document.getElementsByTagName){
+                var scripts = document.getElementsByTagName("script");
+                var src_regex = /(j|J)et(\._base)?(\.min)?\.js/i;
+                var found = false;
+                
+                for(var i=0, length = scripts.length; i<length; ++i){
+                    var src = scripts[i].getAttribute('src');
+                    if(!src){
+                        continue;
+                    }
+                    var match = src.match(src_regex);
+                    if(match){
+                        result = src.substring(0, match.index);
+                        break;
+                    }
                 }
             }
-        }
-        return result;
-    })(),
+            return result;
+        })(),
+        
+        Loaded: (function(){
+            var result = [];
+            if(document && document.getElementsByTagName){
+                var scripts = document.getElementsByTagName("script");
+                for(var i=0, length = scripts.length; i<length; ++i){
+                    var src = scripts[i].getAttribute('src');
+                    if(!src){
+                        continue;
+                    } else {
+                         result.push(src);
+                    }
+                }
+            }
+            return result;
+        })(),
+    },
     
     Root: (function(){
         return document.getElementsByTagName('head')[0];
@@ -85,15 +87,9 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
     }
 };
 
-
-/**
- * A Reference to the global scope
- **/
-Jet.global = this;
+// Prepopulate the namespaces with one scope, Jet, our own
 Jet.Namespaces['Jet'] = Jet;
-/**
- * The main Jet methods.
- **/
+
 Jet.Extend({
     /**
      * 
@@ -113,13 +109,6 @@ Jet.Extend({
             context = (context[ node ] = (context[ node ] == undefined) ? {} : context[ node ]);
         }
         return (this.Namespaces[name] = context);
-    },
-    
-    MapURI: function(namespace, uri){
-        if(typeof uri === 'string'){
-            this.MappedURIs[namespace] = uri;
-        }
-        return this.MappedURIs[namespace] || namespace;
     },
     
     /**
@@ -154,85 +143,14 @@ Jet.Extend({
     /**
      * 
      **/
-     
-     /**
-
-Alternative loader:
-
-function loadScript(url, callback){
-
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-
-    if (script.readyState){  //IE
-        script.onreadystatechange = function(){
-            if (script.readyState == "loaded" ||
-                    script.readyState == "complete"){
-                script.onreadystatechange = null;
-                callback();
-            }
-        };
-    } else {  //Others
-        script.onload = function(){
-            callback();
-        };
-    }
-
-    script.src = url;
-    document.body.appendChild(script);
-}
-
-**
-    Require: function(name){
-        if( ! this.inArray(originial_name, this.Packages))
-        {
-            var uri = this.BasePath + name;
-            if(name.substr(name.length - 3, 3) !== '.js')
-            {
-                name = name.split('.');
-                var nsDir = this.MapNamespace(name.shift());
-            
-            // swap our URI:
-            uri = this.BasePath + nsDir + name.join('.') + (this.Production ? '.min.js' : '.js');
-            }
-        if( ! this.inArray(uri, this.LoadedPackages)){
-        
-            var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
-        
-            http.open('GET', uri, false);
-            http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            http.setRequestHeader("Accept", "application/javascript,text/javascript");
-        
-            try {
-                http.send(null);
-                if((http.status >= 200 && http.status < 300) || http.status == 304){
-                    try{
-                        this.eval("(function(Jet){"+http.responseText+"})(Jet);");
-                    } catch(e){
-                        this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
-                    }
-                    this.LoadedPackages.push(uri);
-                    console.log(this.LoadedPackages);
-                                        console.log(this.Packages);
-                }
-            } catch(e){
-                this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
-            }
-        }}
-    },
-    */
-    
     Require: function(name, callback){
-    // Mustn't already exist.
         if(arguments.length === 0) return; 
         
         if( ! this.inArray(name, this.Packages)){
-            var uri = this.BasePath + name + (this.Production ? '.min.js' : '.js');
-            if( ! this.inArray(uri, this.LoadedURIs)){
+            var uri = this.URI.Base + name + (this.Production ? '.min.js' : '.js');
+            if( ! this.inArray(uri, this.URI.Loaded)){
             
 /**
-* No need, we can just use <script> tags.
-
                 var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
             
                 http.open('GET', uri, false);
@@ -264,7 +182,7 @@ function loadScript(url, callback){
                             script.onreadystatechange = null;
                             if(arguments.length > 1 && typeof callback === 'function')
                                 callback.call(this.Namespace(name, window), null);
-                            Jet.LoadedURIs.push(uri);
+                            Jet.URI.Loaded.push(uri);
                             Jet.Root.removeChild(script);
                         }
                     };
@@ -272,23 +190,19 @@ function loadScript(url, callback){
                     script.onload = function(){
                             if(arguments.length > 1 && typeof callback === 'function')
                                 callback.call(this.Namespace(name, window), null);
-                            Jet.LoadedURIs.push(uri);
+                            Jet.URI.Loaded.push(uri);
                             Jet.Root.removeChild(script);
                     };
                 }
                 script.src = uri;
                 Jet.Root.appendChild(script);
-                console.timeEnd('JetLoader');
-            // ***********************************************************************
-            // END XHR METHOD    
-            // ***********************************************************************
-                
             }
         } else {
             if(arguments.length > 1 && typeof callback === 'function')
                 callback.call(this.Namespace(name, window), null);
         }
     },
+    
     /**
      * 
      **/
