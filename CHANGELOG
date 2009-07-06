@@ -1,0 +1,158 @@
+commit 868d4452269105c6dabe9b933ce1719ec2674ab0
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Mon Jul 6 01:41:17 2009 +1000
+
+    A few cleanups on the code, removed and reorganised a few structures
+
+:100644 100644 2d6a11e... 43714d6... M	src/Jet._base.js
+
+commit 25f8e97cf859bcce8d7b86000416c7e2337675c9
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Mon Jul 6 00:28:21 2009 +1000
+
+    A few tweaks to the /dev/tests/index.html file, rewrote Jet._base.js's
+    Require function to use script tags, this means Jet will only work in
+    the browser, but it also is a speed improvement.
+
+:100644 100644 5a15611... 29adaa3... M	dev/tests/index.html
+:100644 100644 cf2ef82... 2d6a11e... M	src/Jet._base.js
+
+commit 7116a3ce5783faa98d133eed85b6e8cd34696d73
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Sun Jul 5 18:35:54 2009 +1000
+
+    Adding an example implementation of the <script> on line 253, the xhr
+    method on line 232 is still the same.
+
+:100644 100644 8877989... cf2ef82... M	src/Jet._base.js
+
+commit 969f72daefec2d51286d4c858b25e01b24926a2a
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Sat Jul 4 19:26:15 2009 +1000
+
+    Trying out the non recommended $id$.
+
+:100644 100644 62477bc... 8877989... M	src/Jet._base.js
+
+commit 86dc5e955da7cdb5eda663436cd21db50c76413f
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Sat Jul 4 12:26:07 2009 +1000
+
+    Hopefully removing those older files..
+
+:100644 000000 00633ff... 0000000... D	Jet.js
+:100644 000000 a2b6730... 0000000... D	Jet.min.js
+:100644 000000 5511ada... 0000000... D	Profiling/Jet.Profiling.js
+:100644 000000 866f0fe... 0000000... D	Syntax/Jet.Syntax.Test.js
+:100644 000000 aa571bc... 0000000... D	Tests/index.html
+:100644 000000 23146c4... 0000000... D	development/API_PLAN
+:100644 000000 6e9e08e... 0000000... D	development/Makefile
+:100644 000000 e69de29... 0000000... D	development/README
+:100644 000000 94acf3b... 0000000... D	development/ROADMAP
+:100644 000000 8088feb... 0000000... D	development/src/Jet.Console.js
+:100644 000000 6870c78... 0000000... D	development/src/Jet.Event.js
+:100644 000000 8bf112e... 0000000... D	development/src/Jet.Lang.js
+:100644 000000 e69de29... 0000000... D	development/src/Jet.Profiler.js
+:100644 000000 8e6d65a... 0000000... D	development/src/Jet.Test.dev.js
+:100644 000000 93ba120... 0000000... D	development/src/Jet.Test.js
+:100644 000000 7fec86a... 0000000... D	development/src/Jet._base.js
+:100644 000000 ad69eca... 0000000... D	development/src/Jet._intro.js
+:100644 000000 6cad892... 0000000... D	development/src/Jet._outro.js
+
+commit 279ae67e9368179d2b4474c55463144517d2db84
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Sat Jul 4 12:14:50 2009 +1000
+
+    Merging the local development I've been doing under svn after finding
+    out I've actually been using git wrong. >.>
+
+:000000 100644 0000000... 23146c4... A	API_PLAN
+:000000 100644 0000000... 6e9e08e... A	Makefile
+:100644 100644 342f7bf... e69de29... M	README
+:000000 100644 0000000... 94acf3b... A	ROADMAP
+:000000 100644 0000000... 5511ada... A	dev/profiling/Jet.Profiling.js
+:000000 100644 0000000... 3479f64... A	dev/syntax/Jet.Syntax.Profiler.js
+:000000 100644 0000000... 866f0fe... A	dev/syntax/Jet.Syntax.Test.functions.js
+:000000 100644 0000000... bd06f20... A	dev/syntax/Jet.Syntax.Test.js
+:000000 100644 0000000... 5a15611... A	dev/tests/index.html
+:000000 100644 0000000... 036e9eb... A	dist/Jet.js
+:000000 100644 0000000... 8088feb... A	src/Jet.Console.js
+:000000 100644 0000000... 6870c78... A	src/Jet.Event.js
+:000000 100644 0000000... 8bf112e... A	src/Jet.Lang.js
+:000000 100644 0000000... e69de29... A	src/Jet.Profiler.js
+:000000 100644 0000000... 8e6d65a... A	src/Jet.Test.dev.js
+:000000 100644 0000000... 93ba120... A	src/Jet.Test.js
+:000000 100644 0000000... 62477bc... A	src/Jet._base.js
+:000000 100644 0000000... ad69eca... A	src/Jet._intro.js
+:000000 100644 0000000... 6cad892... A	src/Jet._outro.js
+
+commit 9b2235147b9f42af8d96c4337c3a05ae15ed43c3
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Sat Jul 4 12:07:24 2009 +1000
+
+    Adding something to the readme just to test change tracking in git.
+
+:100644 100644 e69de29... 342f7bf... M	README
+
+commit 244a2a10bd65c7be7efb8d24f46ea2cfe2e4dd1c
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Wed Jun 17 22:23:26 2009 +1000
+
+    Adding in the stuff I've been working on, this will be the next version, I've really gotta work out git branches
+
+:000000 100644 0000000... 23146c4... A	development/API_PLAN
+:000000 100644 0000000... 6e9e08e... A	development/Makefile
+:000000 100644 0000000... e69de29... A	development/README
+:000000 100644 0000000... 94acf3b... A	development/ROADMAP
+:000000 100644 0000000... 8088feb... A	development/src/Jet.Console.js
+:000000 100644 0000000... 6870c78... A	development/src/Jet.Event.js
+:000000 100644 0000000... 8bf112e... A	development/src/Jet.Lang.js
+:000000 100644 0000000... e69de29... A	development/src/Jet.Profiler.js
+:000000 100644 0000000... 8e6d65a... A	development/src/Jet.Test.dev.js
+:000000 100644 0000000... 93ba120... A	development/src/Jet.Test.js
+:000000 100644 0000000... 7fec86a... A	development/src/Jet._base.js
+:000000 100644 0000000... ad69eca... A	development/src/Jet._intro.js
+:000000 100644 0000000... 6cad892... A	development/src/Jet._outro.js
+
+commit e59cb6617187dac2fbf0843931becf65433483c2
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Wed Jun 10 22:40:14 2009 +1000
+
+    Releasing Version 1.3.0beta
+
+:100644 100644 be63cba... 00633ff... M	Jet.js
+:000000 100644 0000000... a2b6730... A	Jet.min.js
+
+commit b26bc3ea38b675e20e7fb20332b10b8d1ae89aa8
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Wed Jun 10 07:14:29 2009 +1000
+
+    Releasing Version 0.1.2 (Take 2)
+
+:100644 100644 0a68399... be63cba... M	Jet.js
+
+commit 0457c8b588b1ef2b589d01b37650e926a504cb51
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Wed Jun 10 06:45:01 2009 +1000
+
+    Releasing Version 0.1.2
+
+:000000 100644 0000000... aa571bc... A	Tests/index.html
+
+commit 51d1828999cb0536bd57c30053706191fc5e4cd3
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Tue Jun 9 17:59:35 2009 +1000
+
+    Adding Jet-js
+
+:000000 100644 0000000... 0a68399... A	Jet.js
+:000000 100644 0000000... 5511ada... A	Profiling/Jet.Profiling.js
+:000000 100644 0000000... 866f0fe... A	Syntax/Jet.Syntax.Test.js
+
+commit 58ba2ea6597cf376fe9d3571cddb6a7f4726d240
+Author: Micheil Smith <micheil@yettobebranded.net>
+Date:   Tue Jun 9 17:58:43 2009 +1000
+
+    first commit
+
+:000000 100644 0000000... e69de29... A	README
