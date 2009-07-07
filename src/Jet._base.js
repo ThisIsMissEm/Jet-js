@@ -1,4 +1,4 @@
-// tip from jQuery to speed up the time on undefined calls.
+// tip from jQuery to speed up the time on undefined calls
 var undefined = undefined;
 
 var Jet = this.Jet = this.Jet ? this.Jet : {
