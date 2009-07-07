@@ -12,7 +12,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
         major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
         minor: 0,                //  The minor release, eg, in 1.5.6beta, this would be 6.
-        flag: "alpha",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
+        flag: "",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         toString: function(){
             return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
         }
@@ -22,7 +22,6 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
      *
      **/
     URI: {
-        Filename: /(j|J)et(\._base)?(\.min)?\.js/i,
         /**
          *
          **/
@@ -34,15 +33,18 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         Base: (function(){
             var result = document.location.href;
             if(document && document.getElementsByTagName){
-                var scripts = document.getElementsByTagName("script");
-                var found = false;
-                
-                for(var i=0, l=scripts.length; i<l; ++i){
-                    var src = scripts[i].getAttribute('src');
+                var scripts = document.getElementsByTagName("script"), 
+                    found = false,
+                    i = 0,
+                    src, match;
+                    
+                for(var l=scripts.length; i<l; ++i){
+                    src = scripts[i].getAttribute('src');
                     if(!src){
                         continue;
                     }
-                    var match = src.match(this.Filename);
+                    match = src.match(/jet(\._base)?(\.min)?\.js/i);
+                    
                     if(match){
                         result = src.substring(0, match.index);
                         break;
@@ -58,9 +60,11 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         Loaded: (function(){
             var result = [];
             if(document && document.getElementsByTagName){
-                var scripts = document.getElementsByTagName("script");
+                var scripts = document.getElementsByTagName("script"), 
+                    src;
+                
                 for(var i=0, l=scripts.length; i<l; ++i){
-                    var src = scripts[i].getAttribute('src');
+                    src = scripts[i].getAttribute('src');
                     if(src){
                         result.push(src);
                     } else {
@@ -242,20 +246,20 @@ Jet.Extend({
     Exec: (function(scriptFragment){
         var useText = true,
             root    = Jet.Root, // Has to use Jet.Root due to scope issue.
-            script  = document.createElement('script');
+            script  = document.createElement('script'),
             sid     = 'Jet_script_' + (new Date).getTime();
         
         script.type = 'text/javscript';
         
         try {
-    		script.appendChild( document.createTextNode( "window." + sid + "=1;" ) );
+    		script.appendChild( document.createTextNode( "Jet." + sid + "=1;" ) );
         } catch (e){}
 
         root.appendChild(script);
         root.removeChild(script);
         if ( window[ sid ] ) {
             useText = false;
-    		delete window[ sid ];
+    		delete Jet[ sid ];
 	    }
 	    
 	    // Hopefully loosing memory in IE6

@@ -9,51 +9,98 @@
 
 ;(function(){
     if( ! this.Jet){
-        
-var Jet = this.Jet = {
-    
-    Production: false,
-    Packages: [],
+        // tip from jQuery to speed up the time on undefined calls.
+var undefined = undefined;
+
+var Jet = this.Jet = this.Jet ? this.Jet : {
+    Packages: ["Jet"],
     Namespaces: {},
     
+    /**
+     *
+     **/
     Version: {
-        release: 1,             //  The release, eg, in 1.5.6beta, this would be 1.
-        major: 4,               //  The major release, eg, in 1.5.6beta, this would be 5.
-        minor: 5,               //  The minor release, eg, in 1.5.6beta, this would be 6.
-        flag: "beta",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
-        revision: (function(){  //  The svn/git revision getter.
-            var rev = "$Rev: 12 $".match(/\d+/);
-            return rev ? +rev[0] : NaN;
-        })(),
-        
+        release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
+        major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
+        minor: 0,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        flag: "",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         toString: function(){
-            with(this){
-                return release + "." + major + "." + minor + flag + " (rev " + revision + ")";
-            }
+            return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
         }
     },
     
-    BasePath: (function(){
-        var result = document.location.href;
-        if(document && document.getElementsByTagName){
-            var scripts = document.getElementsByTagName("script");
-            var src_regex = /(j|J)et(\._base)?(\.min)?\.js/i;
-            
-            for(var i=0, length = scripts.length; i<length; ++i){
-                var src = scripts[i].getAttribute('src');
-                if(!src){
-                    continue;
-                }
-                var match = src.match(src_regex);
-                if(match){
-                    result = src.substring(0, match.index);
-                    break;
+    /**
+     *
+     **/
+    URI: {
+        /**
+         *
+         **/
+        Extension: '.js',
+        
+        /**
+         *
+         **/
+        Base: (function(){
+            var result = document.location.href;
+            if(document && document.getElementsByTagName){
+                var scripts = document.getElementsByTagName("script"), 
+                    found = false,
+                    i = 0,
+                    src, match;
+                    
+                for(var l=scripts.length; i<l; ++i){
+                    src = scripts[i].getAttribute('src');
+                    if(!src){
+                        continue;
+                    }
+                    match = src.match(/jet(\._base)?(\.min)?\.js/i);
+                    
+                    if(match){
+                        result = src.substring(0, match.index);
+                        break;
+                    }
                 }
             }
+            return result;
+        })(),
+        
+        /**
+         *
+         **/
+        Loaded: (function(){
+            var result = [];
+            if(document && document.getElementsByTagName){
+                var scripts = document.getElementsByTagName("script"), 
+                    src;
+                
+                for(var i=0, l=scripts.length; i<l; ++i){
+                    src = scripts[i].getAttribute('src');
+                    if(src){
+                        result.push(src);
+                    } else {
+                        continue;
+                    }
+                }
+            }
+            return result;
+        })()
+    },
+    
+    /**
+     *
+     **/
+    Root: (function(){
+        if(document && document.getElementsByTagName){
+            return document.getElementsByTagName('head')[0];
+        } else {
+            return document.body;
         }
-        return result;
     })(),
     
+    /**
+     *
+     **/
     Extend: function(target, source){
         if(source === undefined){
             source = target;
@@ -69,15 +116,7 @@ var Jet = this.Jet = {
     }
 };
 
-
-/**
- * A Reference to the global scope
- **/
-Jet.global = this;
-
-/**
- * The main Jet methods.
- **/
+Jet.Namespaces['Jet'] = Jet;
 Jet.Extend({
     /**
      * 
@@ -94,7 +133,7 @@ Jet.Extend({
             node = null;
         for(;nodes.length;){
             node = nodes.shift();
-            context = (context[ node ] = (context[ node ] == undefined) ? {} : context[ node ]);
+            context = (context[ node ] = (context[ node ] == undefined) ? {/*_super: context*/} : context[ node ]);
         }
         return (this.Namespaces[name] = context);
     },
@@ -109,10 +148,9 @@ Jet.Extend({
                 name = 'Jet';
             } else {
                 methods = {};
-                name = name;
             }
         }
-        this.Extend(this.Namespace(name, window), methods);
+        this.Extend(this.Namespace(name), methods);
         this.Provides(name);
         
         return this;
@@ -132,23 +170,64 @@ Jet.Extend({
      * 
      **/
     Require: function(name){
+        if(name === undefined) {
+            return;
+        }
+        
         if( ! this.inArray(name, this.Packages)){
-            var uri = this.BasePath + name + (this.Production ? '.min.js' : '.js');
-            var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+            var uri = this.URI.Base + name + this.URI.Extension;
             
-            http.open('GET', uri, false);
+            if( ! this.inArray(uri, this.URI.Loaded)){
+                var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
             
-            try {
-                http.send(null);
-                if((http.status >= 200 && http.status < 300) || http.status == 304){
-                    try{
-                        this.eval("(function(Jet){"+http.responseText+"})(Jet);");
-                    } catch(e){
-                        this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+                http.open('GET', uri, false);
+                http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                http.setRequestHeader("Accept", "application/javascript,text/javascript");
+            
+                try {
+                    http.send(null);
+                    if((http.status >= 200 && http.status < 300) || http.status == 304){
+                        try{
+                            this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
+                        } catch(e){
+                            this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+                        }
+                        this.URI.Loaded.push(uri);
                     }
+                } catch(e){
+                    this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
                 }
-            } catch(e){
-                this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+
+/********************************************************************
+ * Asychronous loader, means that it's non blocking.                *
+ ********************************************************************
+
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                if (script.readyState){  //IE
+                    script.onreadystatechange = function(){
+                        if (script.readyState == "loaded" || script.readyState == "complete"){
+                            script.onreadystatechange = null;
+                            if(arguments.length > 1 && typeof callback === 'function'){
+                                callback.call(this.Namespace(name, window), null);
+                            }
+                            Jet.URI.Loaded.push(uri);
+                            Jet.Root.removeChild(script);
+                        }
+                    };
+                } else {  //Others
+                    script.onload = function(){
+                            if(arguments.length > 1 && typeof callback === 'function'){
+                                callback.call(this.Namespace(name, window), null);
+                            }
+                            Jet.URI.Loaded.push(uri);
+                            Jet.Root.removeChild(script);
+                    };
+                }
+                script.src = uri;
+                Jet.Root.appendChild(script);
+                
+ *********************************************************************/
             }
         }
     },
@@ -157,15 +236,7 @@ Jet.Extend({
      * 
      **/
     Stop: function(msg){
-        throw new Error((arguments.length > 0 ? msg : 'Died on Command')); 
-    },
-    
-    /**
-     * 
-     **/
-    With: function(namespace, callback){
-        Jet.Require(namespace);
-        callback.call(this.Namespace(namespace, window), null);
+        console.error((typeof msg !== undefined ? msg : 'Died on Command')); 
     },
     
     /**
@@ -173,7 +244,7 @@ Jet.Extend({
      **/
     inArray: function(elem, array){
         for ( var i = 0, length = array.length; i < length; ++i ) {
-	    if ( array[ i ] === elem ) {
+	        if ( array[ i ] === elem ) {
                 return true;
             }
         }
@@ -181,215 +252,50 @@ Jet.Extend({
     },
     
     /**
-     * 
+     * Reinventing the Eval()
      **/
-    eval: function(scriptFragment){
-        return Jet.global.eval ? Jet.global.eval(scriptFragment) : eval(scriptFragment);
-    }
-});/**
- * Extends Jet to cover a few missing things in JavaScript
- *
- * @class       Lang
- * @extends     Jet
- * @namespace   Jet.Land
- **/
-
-Jet.Provides('Jet.Lang');
-
-/**
- * @namespace Jet.Lang.Array
- **/
-Jet.Package('Jet.Lang.Array', {
-    /**
-     * Check if a value exists in an Array
-     * @argument    value   mixed   The value to check for.
-     * @argument    source  array   The array to look in.
-     * @returns             boolean The value exists in the array.
-     **/
-    hasValue: function(value, source){
-        for(var i = 0, sl = source.length; i<sl; ++i){
-            if(value == source[sl]){
-                return true;
-            }
-        }
-        return false;
-    },
-    
-    /**
-     * Check if given source is an Array.
-     * @argument    source  mixed   The source to check.
-     * @returns             boolean The source an Array.
-     **/
-    is: function(source){
-        return Object.prototype.toString.call(source) === '[object Array]';
-    },
-    
-    /**
-     * Converts a given source into an Array.
-     * @argument    iterable    mixed   The source to convert,
-     * @returns                 array   The source as an Array.
-     **/
-    iterable: function(iterable){
-        var length  = iterable.length || 0,
-        results = new Array(length);
+    Exec: (function(scriptFragment){
+        var useText = true,
+            root    = Jet.Root, // Has to use Jet.Root due to scope issue.
+            script  = document.createElement('script'),
+            sid     = 'Jet_script_' + (new Date).getTime();
         
-        while (length--) results[length] = iterable[length];
-        return results;
-    },
-    
-    /**
-     * Removes an Index from Source
-     * @argument    index   mixed   The index to remove.
-     * @argument    source  array   What to remove the index from.
-     * @returns             array   Source minus the index we removed.
-     **/
-    removeIndex: function(index, source){
-        var to = 0;
-        for(var i=0, sl=source.length; i<sl; i++){
-            if(source[i]==index){
-                to = i;
-                break;
-            }
-        }
-        var rest = source.slice(to + 1);
-        source.length = to;
-        return Array.prototype.push.apply(source, rest);
-    }
-});
+        script.type = 'text/javscript';
+        
+        try {
+    		script.appendChild( document.createTextNode( "Jet." + sid + "=1;" ) );
+        } catch (e){}
 
-
-/**
-* @namespace Jet.Lang.Object
-**/
-Jet.Package('Jet.Lang.Object', {
-    /**
-     * Check to see if two Objects are the same. (checks target against source)
-     * @argument    target  object  The first object.
-     * @argument    source  object  The second object.
-     * @returns             boolean Are the objects the same?
-     **/
-    equal: function(target, source){
-        for(var key in target){
-            if(target[key] != source[key] && ! (typeof target[key] == 'object' || typeof source[key] == 'object') ){
-                return false;
-            }
-            if(typeof target[key] == 'object' || typeof source[key] == 'object'){
-                return Jet.Lang.Object.equal(target[key], source[key] || {});
-            }
-        }
-        return true;
-    },
-    
-    /**
-     * Check if a key is existent in an Object
-     * @argument    key     string  The key to look for.
-     * @argument    source  object  Where to look in.
-     * @returns             boolean If the key exists.
-     **/
-    hasKey: function(key, source){
-        if(source[key] != undefined){
-            return true;
-        }
-        return false;
-    }
-});
-/**
-* Extends Jet to give a Publisher/Subscriber model.
-* @class       Jet
-* @extends     Jet
-* @namespace   Jet
-**/
-Jet.Package('Jet.Event', {
-    _topics: {},
-    
-    /**
-     * A simpler way to execute all associated functions
-     * @argument    topic   string  The topic to pull functions from.
-     * @argument    args    array   Arguments to pass into the function when it is called.
-     * @private
-     **/
-    _dispatcher: function(topic, args){
-        var fns = this._topics[topic];
-        for(var f=0, tl=fns.length; f<tl; ++f){
-            fns[f].apply(this, args);
-        }
-    },
-    
-    /**
-     * Publishes Args to all subscribers on Topic
-     * @argument    topic   string   What publish to, can include a wildcard ( * ) at the end. Eg: "a:b:c:*" would work for both `a:b:c:d` and `a:b:c:z`.
-     * @argument    args    array|string    What to sent to the Subscribers.
-     **/
-    publish: function(topic, args){
-        if(Object.prototype.toString.call(args) !== '[object Array]'){
-            args = [args];
-        }
+        root.appendChild(script);
+        root.removeChild(script);
+        if ( window[ sid ] ) {
+            useText = false;
+    		delete Jet[ sid ];
+	    }
+	    
+	    // Hopefully loosing memory in IE6
+        root = script = sid = null;
         
-        for(var e in this._topics){
-            if(e === topic){
-                this._dispatcher(e, args);
-            } else if(topic.charAt(topic.length-1) === '*' && topic.substr(0, topic.length-1) === e.substr(0, topic.length-1)){
-                this._dispatcher(e, args);
+        return function(scriptFragment){
+            if(scriptFragment.length === 0){
+                return;
             }
-        }
-        
-        return this;
-    },
-    
-    /**
-     * Subscribes to a topic.
-     * @argument    topic   string      The topic to bind the method to.
-     * @argument    method  function    The function to call when topic is published to.
-     * @returns             array       A handle to later unsubscribe the method from the topic.
-     * 
-     * @todo Add Context.
-     **/
-    subscribe: function(topic, method /*, context*/){
-        if(!this._topics[topic]){
-            this._topics[topic] = [];
-        }
-        this._topics[topic].push(method);
-        
-        return [topic, this._topics[topic].length];
-    },
-    
-    /**
-     * Removes a method from a topic.
-     * @argument    handle  array   A predefined handle, usually given from Jet.subscribe, but can look like ['test:test:*', 0], which will remove the first method from the 'test:test:*' topic.
-     **/
-    unsubscribe: function(handle){
-        if(this._topics[handle[0]]){
-            if(this._topics[handle[0]][handle[1]]){
-                delete this._topics[handle[0]][handle[1]];
+            
+            var script = document.createElement('script'),
+                root   = Jet.Root;
+            
+            if(!useText){
+                script.appendChild(document.createTextNode(scriptFragment));
+            } else {
+                script.text = scriptFragment;
             }
-            delete this._topics[handle[0]];
-        }
-    }
-});
-/**
- * Extends Jet to provide access to Console.
- * @class       Console
- * @extends     Jet
- * @namespace   Jet.Console
- *
- * @todo        Possibly write in a custom error console, similar to Firebug Lite.
- **/
-Jet.Package('Jet.Console', {
-    log: function(){
-        if( ! Jet.Production && typeof console === 'object' && console['log']){
-            console.log(Array.prototype.join.call(arguments, ' '));
-        }
-    },
-    warn: function(){
-        if( ! Jet.Production && typeof console === 'object' && console['warn']){
-            console.warn(Array.prototype.join.call(arguments, ' '));
-        }
-    },
-    error: function(){
-        if( ! Jet.Production && typeof console === 'object' && console['error']){
-            console.error(Array.prototype.join.call(arguments, ' '));
-        }
-    }
+            root.appendChild(script);
+            root.removeChild(script);
+            
+       	    // Hopefully loosing memory in IE6
+            root = script = useText = null;
+        };
+    })()
 });
     } else {
         var Jet = this.Jet;

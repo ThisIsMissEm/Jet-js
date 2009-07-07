@@ -14,9 +14,6 @@ jet:
 	
 	@@cat src/Jet._intro.js\
 	      src/Jet._base.js\
-          src/Jet.Lang.js\
-          src/Jet.Event.js\
-          src/Jet.Console.js\
           src/Jet._outro.js > "${DIST_DIR}/Jet.js"
 	@@echo
 	@@echo "Jet build complete."
