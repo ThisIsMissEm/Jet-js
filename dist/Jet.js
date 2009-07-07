@@ -9,7 +9,7 @@
 
 ;(function(){
     if( ! this.Jet){
-        // tip from jQuery to speed up the time on undefined calls.
+        // tip from jQuery to speed up the time on undefined calls
 var undefined = undefined;
 
 var Jet = this.Jet = this.Jet ? this.Jet : {
@@ -22,7 +22,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
     Version: {
         release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
         major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
-        minor: 0,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        minor: 1,                //  The minor release, eg, in 1.5.6beta, this would be 6.
         flag: "",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         toString: function(){
             return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
@@ -44,12 +44,9 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         Base: (function(){
             var result = document.location.href;
             if(document && document.getElementsByTagName){
-                var scripts = document.getElementsByTagName("script"), 
-                    found = false,
-                    i = 0,
-                    src, match;
+                var scripts = document.getElementsByTagName("script");
                     
-                for(var l=scripts.length; i<l; ++i){
+                for(var i=0, src, match, l=scripts.length; i<l; ++i){
                     src = scripts[i].getAttribute('src');
                     if(!src){
                         continue;
@@ -71,10 +68,9 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         Loaded: (function(){
             var result = [];
             if(document && document.getElementsByTagName){
-                var scripts = document.getElementsByTagName("script"), 
-                    src;
+                var scripts = document.getElementsByTagName("script");
                 
-                for(var i=0, l=scripts.length; i<l; ++i){
+                for(var i=0, src, l=scripts.length; i<l; ++i){
                     src = scripts[i].getAttribute('src');
                     if(src){
                         result.push(src);
@@ -91,11 +87,14 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
      *
      **/
     Root: (function(){
-        if(document && document.getElementsByTagName){
-            return document.getElementsByTagName('head')[0];
-        } else {
-            return document.body;
+        if(document){
+            if(document.getElementsByTagName){
+                return document.getElementsByTagName('head')[0];
+            } else {
+                return document.body;
+            }
         }
+        return '';
     })(),
     
     /**
@@ -129,9 +128,7 @@ Jet.Extend({
         }
         
         context = context || window;
-        var nodes = name.split('.'),
-            node = null;
-        for(;nodes.length;){
+        for(var node = null, nodes = name.split('.'); nodes.length;){
             node = nodes.shift();
             context = (context[ node ] = (context[ node ] == undefined) ? {/*_super: context*/} : context[ node ]);
         }
@@ -142,6 +139,10 @@ Jet.Extend({
      * 
      **/
     Package: function(name, methods){
+        if(arguments.length == 0){
+            return this;
+        }
+        
         if(arguments.length == 1){
             if(typeof name === 'object'){
                 methods = name;
@@ -190,7 +191,7 @@ Jet.Extend({
                         try{
                             this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
                         } catch(e){
-                            this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+                            this.Stop('Jet.Require failed to execute '+uri+'; Reason: '+e);
                         }
                         this.URI.Loaded.push(uri);
                     }
@@ -235,15 +236,15 @@ Jet.Extend({
     /**
      * 
      **/
-    Stop: function(msg){
-        console.error((typeof msg !== undefined ? msg : 'Died on Command')); 
+    Stop: function(){
+        throw (Array.prototype.join.call(arguments, ' | '));
     },
     
     /**
      * 
      **/
     inArray: function(elem, array){
-        for ( var i = 0, length = array.length; i < length; ++i ) {
+        for ( var i = 0, len = array.length; i < len; ++i ) {
 	        if ( array[ i ] === elem ) {
                 return true;
             }
