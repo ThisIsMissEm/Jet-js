@@ -11,7 +11,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
     Version: {
         release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
         major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
-        minor: 1,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        minor: 2,                //  The minor release, eg, in 1.5.6beta, this would be 6.
         flag: "",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         toString: function(){
             return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
