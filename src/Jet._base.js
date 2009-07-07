@@ -96,9 +96,10 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
         }
         
         for(var name in source){
-            if(target[name] === undefined){
-                target[name] = source[name];
+            if(target[name] === source[name]){
+                continue;
             }
+            target[name] = source[name];
         }
         return target;
     }
@@ -141,7 +142,7 @@ Jet.Extend({
             }
         }
         this.Extend(this.Namespace(name), methods);
-        this.Provides(name);
+        this.Provide(name);
         
         return this;
     },
@@ -149,7 +150,7 @@ Jet.Extend({
     /**
      * 
      **/
-    Provides: function(name){
+    Provide: function(name){
         if( ! this.inArray(name, this.Packages)){
             this.Packages.push(name);
         }
@@ -161,7 +162,7 @@ Jet.Extend({
      **/
     Require: function(name){
         if(name === undefined) {
-            return;
+            return this;
         }
         
         if( ! this.inArray(name, this.Packages)){
@@ -220,6 +221,7 @@ Jet.Extend({
  *********************************************************************/
             }
         }
+        return this;
     },
     
     /**
