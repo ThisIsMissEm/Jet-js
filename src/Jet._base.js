@@ -1,45 +1,48 @@
+// tip from jQuery to speed up the time on undefined calls.
+var undefined = undefined;
+
 var Jet = this.Jet = this.Jet ? this.Jet : {
-    Production: false,
     Packages: ["Jet"],
     Namespaces: {},
-/*    MappedURIs: {
-        //  Default mapping for Jet. This is because we actually chop this off.
-        'Jet.': 'Jet/'
-    },*/
     
+    /**
+     *
+     **/
     Version: {
-        release: 1,             //  The release, eg, in 1.5.6beta, this would be 1.
-        major: 4,               //  The major release, eg, in 1.5.6beta, this would be 5.
-        minor: 5,               //  The minor release, eg, in 1.5.6beta, this would be 6.
-        flag: "beta",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
-        
-// FIXME: No Revision tag since moving over to Git.
-//        revision: (function(){  //  The svn/git revision getter.
-//            var rev = "Rev: $id$".match(/\d+/);
-//            return rev ? +rev[0] : NaN;
-//        })(),
-        
+        release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
+        major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
+        minor: 0,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        flag: "alpha",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
         toString: function(){
-            with(this){
-                return release + "." + major + "." + minor + flag; // + " (rev " + revision + ")";
-            }
+            return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
         }
     },
     
+    /**
+     *
+     **/
     URI: {
+        Filename: /(j|J)et(\._base)?(\.min)?\.js/i,
+        /**
+         *
+         **/
+        Extension: '.js',
+        
+        /**
+         *
+         **/
         Base: (function(){
             var result = document.location.href;
             if(document && document.getElementsByTagName){
                 var scripts = document.getElementsByTagName("script");
-                var src_regex = /(j|J)et(\._base)?(\.min)?\.js/i;
                 var found = false;
                 
-                for(var i=0, length = scripts.length; i<length; ++i){
+                for(var i=0, l=scripts.length; i<l; ++i){
                     var src = scripts[i].getAttribute('src');
                     if(!src){
                         continue;
                     }
-                    var match = src.match(src_regex);
+                    var match = src.match(this.Filename);
                     if(match){
                         result = src.substring(0, match.index);
                         break;
@@ -49,29 +52,40 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
             return result;
         })(),
         
+        /**
+         *
+         **/
         Loaded: (function(){
             var result = [];
             if(document && document.getElementsByTagName){
                 var scripts = document.getElementsByTagName("script");
-                for(var i=0, length = scripts.length; i<length; ++i){
+                for(var i=0, l=scripts.length; i<l; ++i){
                     var src = scripts[i].getAttribute('src');
-                    if(!src){
-                        continue;
+                    if(src){
+                        result.push(src);
                     } else {
-                         result.push(src);
+                        continue;
                     }
                 }
             }
             return result;
-        })(),
+        })()
     },
     
+    /**
+     *
+     **/
     Root: (function(){
-        return document.getElementsByTagName('head')[0];
+        if(document && document.getElementsByTagName){
+            return document.getElementsByTagName('head')[0];
+        } else {
+            return document.body;
+        }
     })(),
     
-    
-    
+    /**
+     *
+     **/
     Extend: function(target, source){
         if(source === undefined){
             source = target;
@@ -87,9 +101,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
     }
 };
 
-// Prepopulate the namespaces with one scope, Jet, our own
 Jet.Namespaces['Jet'] = Jet;
-
 Jet.Extend({
     /**
      * 
@@ -106,7 +118,7 @@ Jet.Extend({
             node = null;
         for(;nodes.length;){
             node = nodes.shift();
-            context = (context[ node ] = (context[ node ] == undefined) ? {} : context[ node ]);
+            context = (context[ node ] = (context[ node ] == undefined) ? {/*_super: context*/} : context[ node ]);
         }
         return (this.Namespaces[name] = context);
     },
@@ -121,10 +133,9 @@ Jet.Extend({
                 name = 'Jet';
             } else {
                 methods = {};
-                name = name;
             }
         }
-        this.Extend(this.Namespace(name, window), methods);
+        this.Extend(this.Namespace(name), methods);
         this.Provides(name);
         
         return this;
@@ -143,14 +154,15 @@ Jet.Extend({
     /**
      * 
      **/
-    Require: function(name, callback){
-        if(arguments.length === 0) return; 
+    Require: function(name){
+        if(name === undefined) {
+            return;
+        }
         
         if( ! this.inArray(name, this.Packages)){
-            var uri = this.URI.Base + name + (this.Production ? '.min.js' : '.js');
-            if( ! this.inArray(uri, this.URI.Loaded)){
+            var uri = this.URI.Base + name + this.URI.Extension;
             
-/**
+            if( ! this.inArray(uri, this.URI.Loaded)){
                 var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
             
                 http.open('GET', uri, false);
@@ -161,18 +173,19 @@ Jet.Extend({
                     http.send(null);
                     if((http.status >= 200 && http.status < 300) || http.status == 304){
                         try{
-                            this.exec(";(function(Jet){"+http.responseText+"})(Jet);");
-                            if(arguments.length > 1 && typeof callback === 'function')
-                                callback.call(this.Namespace(name, window), null);
+                            this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
                         } catch(e){
                             this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
                         }
-                        this.LoadedURIs.push(uri);
+                        this.URI.Loaded.push(uri);
                     }
                 } catch(e){
                     this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
                 }
-*/
+
+/********************************************************************
+ * Asychronous loader, means that it's non blocking.                *
+ ********************************************************************
 
                 var script = document.createElement("script");
                 script.type = "text/javascript";
@@ -180,26 +193,27 @@ Jet.Extend({
                     script.onreadystatechange = function(){
                         if (script.readyState == "loaded" || script.readyState == "complete"){
                             script.onreadystatechange = null;
-                            if(arguments.length > 1 && typeof callback === 'function')
+                            if(arguments.length > 1 && typeof callback === 'function'){
                                 callback.call(this.Namespace(name, window), null);
+                            }
                             Jet.URI.Loaded.push(uri);
                             Jet.Root.removeChild(script);
                         }
                     };
                 } else {  //Others
                     script.onload = function(){
-                            if(arguments.length > 1 && typeof callback === 'function')
+                            if(arguments.length > 1 && typeof callback === 'function'){
                                 callback.call(this.Namespace(name, window), null);
+                            }
                             Jet.URI.Loaded.push(uri);
                             Jet.Root.removeChild(script);
                     };
                 }
                 script.src = uri;
                 Jet.Root.appendChild(script);
+                
+ *********************************************************************/
             }
-        } else {
-            if(arguments.length > 1 && typeof callback === 'function')
-                callback.call(this.Namespace(name, window), null);
         }
     },
     
@@ -208,14 +222,6 @@ Jet.Extend({
      **/
     Stop: function(msg){
         console.error((typeof msg !== undefined ? msg : 'Died on Command')); 
-    },
-    
-    /**
-     * 
-     **/
-    With: function(namespace, callback){
-        Jet.Require(namespace);
-        callback.call(this.Namespace(namespace, window), null);
     },
     
     /**
@@ -233,9 +239,9 @@ Jet.Extend({
     /**
      * Reinventing the Eval()
      **/
-    exec: (function(scriptFragment){
+    Exec: (function(scriptFragment){
         var useText = true,
-            root    = Jet.Root,
+            root    = Jet.Root, // Has to use Jet.Root due to scope issue.
             script  = document.createElement('script');
             sid     = 'Jet_script_' + (new Date).getTime();
         
@@ -252,12 +258,17 @@ Jet.Extend({
     		delete window[ sid ];
 	    }
 	    
+	    // Hopefully loosing memory in IE6
         root = script = sid = null;
         
         return function(scriptFragment){
-            if(scriptFragment.length === 0) return;
+            if(scriptFragment.length === 0){
+                return;
+            }
+            
             var script = document.createElement('script'),
                 root   = Jet.Root;
+            
             if(!useText){
                 script.appendChild(document.createTextNode(scriptFragment));
             } else {
@@ -266,6 +277,7 @@ Jet.Extend({
             root.appendChild(script);
             root.removeChild(script);
             
+       	    // Hopefully loosing memory in IE6
             root = script = useText = null;
         };
     })()

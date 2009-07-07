@@ -6,7 +6,11 @@ This document outlines the objectives of each release of Jet.
     First public release, contains basic functionality.
 
 1.4:
-    Restructured API
+    Restructure API to be more consistent and chainable
 
 1.5:
-    Jet.Require now autoloads files.
+    Jet.Require to autoloads files.
+    
+2.0:
+    Realign library to focus more on Jet._base.js rather then the other utilities.
+    Head towards possible class based / fully chainable / instance based code.
