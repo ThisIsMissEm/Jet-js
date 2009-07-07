@@ -2,14 +2,13 @@
  * @namespace   Jet
  * @author      Micheil Smith   micheil@yettobebranded.net
  *
- * @todo        Implement Lazy Loader
- * @todo        Write more test cases, using third party test runner.
+ * @todo        Write test cases, using third party test runner.
  * @todo        Write up the examples for how to use it, and what it does.
  **/
 
 ;(function(){
-    if( ! this.Jet){
-        // tip from jQuery to speed up the time on undefined calls
+       
+// tip from jQuery to speed up the time on undefined calls
 var undefined = undefined;
 
 var Jet = this.Jet = this.Jet ? this.Jet : {
@@ -298,7 +297,4 @@ Jet.Extend({
         };
     })()
 });
-    } else {
-        var Jet = this.Jet;
-    }
 })();
