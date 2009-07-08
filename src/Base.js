@@ -1,7 +1,47 @@
-// tip from jQuery to speed up the time on undefined calls
-var undefined = undefined;
+/**
+ *
+ * TODO: Come up with better Configuration setting / getting.
+ *
+ **/
 
-var Jet = this.Jet = this.Jet ? this.Jet : {
+// tip from jQuery to speed up the time on undefined calls
+var undefined = undefined,
+    Jet = this.Jet = this.Jet ? this.Jet : {};
+
+/**
+ *
+ **/
+Jet.Extend = function(target, source){
+    if(source === undefined){
+        source = target;
+        target = this;
+    }
+    
+    for(var name in source){
+        if(target[name] === source[name]){
+            continue;
+        }
+        target[name] = source[name];
+    }
+    return target;
+};
+
+Jet.Extend({
+
+    Config: {
+        production: false,
+        paths: {
+            Jet: {
+                uri: '__BASE__/',
+                modules: {
+                    Event: {
+                        path: '../Event/'
+                    }
+                }
+            }
+        }
+    },
+    
     Packages: ["Jet"],
     Namespaces: {},
     
@@ -11,10 +51,11 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
     Version: {
         release: 1,              //  The release, eg, in 1.5.6beta, this would be 1.
         major: 5,                //  The major release, eg, in 1.5.6beta, this would be 5.
-        minor: 2,                //  The minor release, eg, in 1.5.6beta, this would be 6.
-        flag: "",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
+        minor: 3,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        flag: "experimental",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
+        build: "%build%",
         toString: function(){
-            return this.release + "." + this.major + "." + this.minor + this.flag; // + " (rev " + revision + ")";
+            return this.release + "." + this.major + "." + this.minor + this.flag + (this.build != '%build%' ? " Build "+this.build : ''); // + " (rev " + revision + ")";
         }
     },
     
@@ -22,11 +63,6 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
      *
      **/
     URI: {
-        /**
-         *
-         **/
-        Extension: '.js',
-        
         /**
          *
          **/
@@ -40,7 +76,7 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
                     if(!src){
                         continue;
                     }
-                    match = src.match(/jet(\._base)?(\.min)?\.js/i);
+                    match = src.match(/(Jet|Base)?(\.min)?\.js/i);
                     
                     if(match){
                         result = src.substring(0, match.index);
@@ -69,7 +105,48 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
                 }
             }
             return result;
-        })()
+        })(),
+
+        Resolve: function(name){
+            var nsc,
+                JCp,
+                uri   = this.Base,
+                fname = [],
+                ns    = name.split('.');
+            
+            if(Jet.Config && (JCp = Jet.Config.paths)){
+                if(JCp[ns[0]] != undefined){
+                    nsc = ns.shift();
+                    uri = JCp[nsc].uri.replace(/(__BASE__\/)/, this.Base) || this.Base;
+                    if(JCp[nsc].modules){
+                        JCp = JCp[nsc].modules;
+                        
+                        for(var i = 0, l = ns.length; i<l; ++i){
+                            nsc = ns[i];
+                            if(JCp[nsc] && JCp[nsc].path){
+                                uri += JCp[nsc].path;
+                                fname = ['_core'];
+                                JCp = JCp[nsc];
+                            } else {
+                                if(ns.length == i+1){
+                                    fname.push(ns[i]);
+                                } else {
+                                    uri += nsc+'/';
+                                }
+                            }
+                        }
+                        fname = fname.join('.');
+                    }
+                } else {
+                    fname = ns.join('.');
+                }
+            } else {
+                fname = ns.join('.');
+            }
+            console.log('fname: ',fname);
+            console.log('uri: ', uri+fname+(Jet.Config.production ? '.min.js' : '.js'));
+            return uri + fname + (Jet.Config.production ? '.min.js' : '.js');
+        }
     },
     
     /**
@@ -84,26 +161,8 @@ var Jet = this.Jet = this.Jet ? this.Jet : {
             }
         }
         return '';
-    })(),
-    
-    /**
-     *
-     **/
-    Extend: function(target, source){
-        if(source === undefined){
-            source = target;
-            target = this;
-        }
-        
-        for(var name in source){
-            if(target[name] === source[name]){
-                continue;
-            }
-            target[name] = source[name];
-        }
-        return target;
-    }
-};
+    })()
+});
 
 Jet.Namespaces['Jet'] = Jet;
 Jet.Extend({
@@ -165,8 +224,11 @@ Jet.Extend({
             return this;
         }
         
+        var uri = this.URI.Resolve(name);
+        console.log('require: uri: ', uri);
+        console.log(this.Packages, this.inArray(name, this.Packages));
         if( ! this.inArray(name, this.Packages)){
-            var uri = this.URI.Base + name + this.URI.Extension;
+
             
             if( ! this.inArray(uri, this.URI.Loaded)){
                 var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
