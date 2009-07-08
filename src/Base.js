@@ -143,8 +143,6 @@ Jet.Extend({
             } else {
                 fname = ns.join('.');
             }
-            console.log('fname: ',fname);
-            console.log('uri: ', uri+fname+(Jet.Config.production ? '.min.js' : '.js'));
             return uri + fname + (Jet.Config.production ? '.min.js' : '.js');
         }
     },
@@ -224,11 +222,8 @@ Jet.Extend({
             return this;
         }
         
-        var uri = this.URI.Resolve(name);
-        console.log('require: uri: ', uri);
-        console.log(this.Packages, this.inArray(name, this.Packages));
         if( ! this.inArray(name, this.Packages)){
-
+            var uri = this.URI.Resolve(name);
             
             if( ! this.inArray(uri, this.URI.Loaded)){
                 var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
