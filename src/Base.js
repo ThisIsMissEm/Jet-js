@@ -217,65 +217,72 @@ Jet.Extend({
     /**
      * 
      **/
-    Require: function(name){
-        if(name === undefined) {
+    Require: function(namespace){
+        if(namespace === undefined) {
             return this;
         }
         
-        if( ! this.inArray(name, this.Packages)){
-            var uri = this.URI.Resolve(name);
-            
-            if( ! this.inArray(uri, this.URI.Loaded)){
-                var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
-            
-                http.open('GET', uri, false);
-                http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                http.setRequestHeader("Accept", "application/javascript,text/javascript");
-            
-                try {
-                    http.send(null);
-                    if((http.status >= 200 && http.status < 300) || http.status == 304){
-                        try{
-                            this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
-                        } catch(e){
-                            this.Stop('Jet.Require failed to execute '+uri+'; Reason: '+e);
-                        }
-                        this.URI.Loaded.push(uri);
-                    }
-                } catch(e){
-                    this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
-                }
-
-/********************************************************************
- * Asychronous loader, means that it's non blocking.                *
- ********************************************************************
-
-                var script = document.createElement("script");
-                script.type = "text/javascript";
-                if (script.readyState){  //IE
-                    script.onreadystatechange = function(){
-                        if (script.readyState == "loaded" || script.readyState == "complete"){
-                            script.onreadystatechange = null;
-                            if(arguments.length > 1 && typeof callback === 'function'){
-                                callback.call(this.Namespace(name, window), null);
-                            }
-                            Jet.URI.Loaded.push(uri);
-                            Jet.Root.removeChild(script);
-                        }
-                    };
-                } else {  //Others
-                    script.onload = function(){
-                            if(arguments.length > 1 && typeof callback === 'function'){
-                                callback.call(this.Namespace(name, window), null);
-                            }
-                            Jet.URI.Loaded.push(uri);
-                            Jet.Root.removeChild(script);
-                    };
-                }
-                script.src = uri;
-                Jet.Root.appendChild(script);
+        if(Object.prototype.toString.call(namespace) === '[object Array]'){
+            for(var i in namespace){
+                Jet.Require(namespace[i]);
+            }
+        } else {
+        
+            if( ! this.inArray(namespace, this.Packages)){
+                var uri = this.URI.Resolve(namespace);
                 
- *********************************************************************/
+                if( ! this.inArray(uri, this.URI.Loaded)){
+                    var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
+                
+                    http.open('GET', uri, false);
+                    http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                    http.setRequestHeader("Accept", "application/javascript,text/javascript");
+                
+                    try {
+                        http.send(null);
+                        if((http.status >= 200 && http.status < 300) || http.status == 304){
+                            try{
+                                this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
+                            } catch(e){
+                                this.Stop('Jet.Require failed to execute '+uri+'; Reason: '+e);
+                            }
+                            this.URI.Loaded.push(uri);
+                        }
+                    } catch(e){
+    //                    this.Stop('Jet.Require failed to load '+uri+'; Reason: '+e);
+                    }
+
+    /********************************************************************
+     * Asychronous loader, means that it's non blocking.                *
+     ********************************************************************
+
+                    var script = document.createElement("script");
+                    script.type = "text/javascript";
+                    if (script.readyState){  //IE
+                        script.onreadystatechange = function(){
+                            if (script.readyState == "loaded" || script.readyState == "complete"){
+                                script.onreadystatechange = null;
+                                if(arguments.length > 1 && typeof callback === 'function'){
+                                    callback.call(this.Namespace(name, window), null);
+                                }
+                                Jet.URI.Loaded.push(uri);
+                                Jet.Root.removeChild(script);
+                            }
+                        };
+                    } else {  //Others
+                        script.onload = function(){
+                                if(arguments.length > 1 && typeof callback === 'function'){
+                                    callback.call(this.Namespace(name, window), null);
+                                }
+                                Jet.URI.Loaded.push(uri);
+                                Jet.Root.removeChild(script);
+                        };
+                    }
+                    script.src = uri;
+                    Jet.Root.appendChild(script);
+                    
+     *********************************************************************/
+                }
             }
         }
         return this;
