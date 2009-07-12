@@ -137,4 +137,7 @@ a, a:link {
         text-decoration:underline;
     }
         
+#content dl {
+    font-size: 0.9em;
+}
         
