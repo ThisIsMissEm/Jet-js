@@ -17,11 +17,23 @@ Jet.Extend = function(target, source){
         target = this;
     }
     
-    for(var name in source){
-        if(target[name] === source[name]){
-            continue;
-        }
-        target[name] = source[name];
+    for(var prop in source){
+        // store a reference for quicker running.
+        var tp = target[ prop ], sp = source[ prop ];
+
+	    // Prevent never-ending loop
+	    if ( tp === sp ) {
+		    continue;
+	    }
+
+	    // Recurse if we're merging object values
+	    if ( sp && typeof sp === "object" && !sp.nodeType) {
+		    target[ prop ] = this.Extend(tp || ( sp.length != null ? [ ] : { } ), sp );
+
+	    // Don't bring in undefined values
+	    } else if ( sp !== undefined ) {
+		    target[ prop ] = sp;
+	    }
     }
     return target;
 };
@@ -42,7 +54,7 @@ Jet.Extend({
         }
     },
     
-    Packages: ["Jet"],
+//    Packages: ["Jet"],
     Namespaces: {},
     
     /**
@@ -186,11 +198,12 @@ Jet.Extend({
      * 
      **/
     Package: function(name, methods){
-        if(arguments.length == 0){
+        var args = arguments.length;
+        if(args == 0){
             return this;
         }
         
-        if(arguments.length == 1){
+        if(args == 1){
             if(typeof name === 'object'){
                 methods = name;
                 name = 'Jet';
@@ -199,20 +212,20 @@ Jet.Extend({
             }
         }
         this.Extend(this.Namespace(name), methods);
-        this.Provide(name);
+        //this.Provide(name);
         
         return this;
     },
     
     /**
      * 
-     **/
+     **
     Provide: function(name){
-        if( ! this.inArray(name, this.Packages)){
+        if( ! this.Has(this.Packages, name)){
             this.Packages.push(name);
         }
         return this;
-    },
+    },*/
     
     /**
      * 
@@ -227,16 +240,16 @@ Jet.Extend({
                 Jet.Require(namespace[i]);
             }
         } else {
-        
-            if( ! this.inArray(namespace, this.Packages)){
+            if( ! this.Has(this.Namespaces, namespace) ){
+//            if( ! this.Has(this.Packages, namespace)){
                 var uri = this.URI.Resolve(namespace);
                 
-                if( ! this.inArray(uri, this.URI.Loaded)){
+                if( ! this.Has(this.URI.Loaded, uri)){
                     var http = window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest();
                 
                     http.open('GET', uri, false);
                     http.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                    http.setRequestHeader("Accept", "application/javascript,text/javascript");
+                    http.setRequestHeader("Accept", "application/javascript,text/javascript,application/x-javascript");
                 
                     try {
                         http.send(null);
@@ -298,13 +311,22 @@ Jet.Extend({
     /**
      * 
      **/
-    inArray: function(elem, array){
-        for ( var i = 0, len = array.length; i < len; ++i ) {
-	        if ( array[ i ] === elem ) {
-                return true;
-            }
+    Has: function(haystack, needle){
+        if(typeof haystack === 'object'){
+            return !(haystack[needle] === undefined);
         }
-        return false;
+        if(Array.prototype.indexOf){
+            return Array.prototype.indexOf.call(haystack, needle) > -1 ? true : false;
+        } else {
+            // fallback to a loop if Array.prototype.indexOf isn't found:
+            for ( var i = 0, n = haystack.length; i < n; ++i ) {
+                if ( haystack[ i ] === needle ) {
+                    return true;
+                }
+                continue;
+            }
+            return false;
+        }
     },
     
     /**
