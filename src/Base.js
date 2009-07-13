@@ -55,7 +55,7 @@ Jet.Extend({
     },
     
 //    Packages: ["Jet"],
-    Namespaces: {},
+    Namespaces: {"Jet": Jet},
     
     /**
      *
@@ -174,7 +174,7 @@ Jet.Extend({
     })()
 });
 
-Jet.Namespaces['Jet'] = Jet;
+//Jet.Namespaces['Jet'] = Jet;
 Jet.Extend({
     /**
      * 
