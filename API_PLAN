@@ -1,79 +1,35 @@
+/**
+
+API PLAN 
+
+Jet = jet =...
+
+    .global = this;
+    .uri
+        .base = location of Jet.js
+        .loaded = [] of loaded scripts.
+        .resolve(); = replaces .'s in NS with / and leaves the last out.
+                  eg: "my.name.space.wins" => 'my/name/space/wins.js' OR IN PROD => 'my/name/space/wins.min.js'
+
+    .version = {} of versioning, .toString to get the current version.
+    .production = bool
+
+    .hitch();
+    .mixin();
+        ._mixin => does the work.
+
+    .package();
+    .namespace();
+    .require();
 
 
-Jet = {
-
-// DONE:
-    Production: false,
-    Packages: [],
-    Namespaces: {},
+    .publish();
+    .subscribe();
+    .unsubscribe();
     
-    Version: {
-        release: 0,
-        major: 0,
-        minor: 0,
-        flag: "beta",
-        revision: (function(){})(),
-        
-        toString: function(){}
-    },
+    .throw();
     
-    Stop: function(){},
-    Extend: function(){},
-    Namespace: function(){},
-    Package: function(){},
-    Provides: function(){},
-    Require: function(){},
-    With: function(){},
     
-    inArray: function(){},
-
-
-    Lang: {
-        typeOf: function(){},
-        
-        Array: {
-            indexOf: function(){},
-            each: function(){},
-            map: function(){},
-            filter: function(){},
-            toArray: function(){},
-            
-            contains: Jet.inArray
-        },
-        Object: {
-            equal: function(){},
-            hasKey: function(){},
-            
-            extend: Jet.Extend
-        },
-        String: {
-            trim: function(){},
-            stripTags: function(){}
-        }
-    },
     
-    Event: {
-        publish: function(){},
-        subscribe: function(){},
-        unsubscribe: function(){}
-    },
-    
-// TODO:    
-    Debug: {
-        log: function(){},
-        error: function(){},
-        warn: function(){}
-    },
-        
-    Test: {
-        tests: {},
-        
-        module: function(){},
-        test: function(){}
-    },
-    
-    Profiler: {
-        compare: function(){},
-        profile: function(){}
-    }
-}
+    All methods and properties of Jet are in lower case for easier typing.
+**/
