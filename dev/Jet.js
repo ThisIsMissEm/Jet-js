@@ -31,6 +31,17 @@
         return obj;
     };
     
+    
+    /*
+    Jet.mixin(Jet, {
+        host
+        
+    });
+    */
+    
+    
+    
+    
     Jet.mixin(Jet, {
         version: {
             release: 2,              //  The release, eg, in 1.5.6beta, this would be 1.
@@ -70,9 +81,17 @@
                 if(document && document.getElementsByTagName){
                     var scripts = document.getElementsByTagName("script");
                     
+                    console.log(scripts.length);
+                    
                     for(var i=0, src, l=scripts.length; i<l; ++i){
-                        src = scripts[i].getAttribute('src');
-                        if(src){
+                        var src = scripts[i].getAttribute('src');
+                        var type = scripts[i].getAttribute('type');
+                        
+                        console.log(src, type);
+                        
+                        if(src && (type == 'application/javascript' || 
+                                   type == 'text/javascript' || type == 'application/x-javascript')
+                        ){
                             result.push(src);
                         } else {
                             continue;
@@ -144,7 +163,7 @@
     Jet.mixin(Jet, {
         namespaces: {'Jet': Jet},
     
-        package: function(ns, methods){
+        module: function(ns, methods){
             if(ns){
             	if(typeof ns == "object"){
             		methods = ns;
@@ -217,7 +236,7 @@
                     script  = document.createElement('script'),
                     sid     = 'Jet_script_' + (new Date).getTime();
                     
-                script.type = 'text/javscript';
+                script.type = 'text/javascript';
                 
                 try {
                     script.appendChild( document.createTextNode( "Jet." + sid + "=1;" ) );
