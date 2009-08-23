@@ -1,0 +1,36 @@
+
+==================================================================================================================================
+                                       Jet.js
+==================================================================================================================================
+-----------------+----------------------------------+-----------------+---------------+------------------------------------------+
+  Status         |  Property Name                   |  Property Type  |  Return Type  |  Arguments                               |
+-----------------+----------------------------------+-----------------+---------------+------------------------------------------+
+                 |                                  |                 |               |                                          |
+                 |  Jet                             |                 |               |                                          |
+                 |     config                       |  Object         |               |                                          |
+                 |     global                       |  Reference      |               |                                          |
+                 |                                  |                 |               |                                          |
+                 |     _baseURL                     |  (Function)()   |  String       |                                          |
+                 |     _resolver                    |  Function       |  String       |  Namespace                               |
+                 |                                  |                 |               |                                          |
+                 |     _toArray                     |  Function       |  Array        |  Source                                  |
+                 |                                  |                 |               |                                          |
+                 |     execute                      |  (Function)()   |  null         |  ScriptFragment                          |
+                 |                                  |                 |               |                                          |
+                 |     module                       |  Function       |  Jet          |  Namespace, Methods                      |
+                 |     require                      |  Function       |  Jet          |  Namespace                               |
+                 |                                  |                 |               |                                          |
+                 |     take/use/import              |  Function       |  Jet          |  Namespace                               |
+                 |                                  |                 |               |                                          |
+                 |     mixin                        |  Function       |  Object       |  Target, Source                          |
+                 |     hitch                        |  Function       |  Object       |  Scope, Function                         |
+                 |     has                          |  Function       |  Boolean      |  Haystack, Needle                        |
+                 |                                  |                 |               |                                          |
+                 |                                  |                 |               |                                          |
+                 |                                  |                 |               |                                          |
+                 |                                  |                 |               |                                          |
+                 |                                  |                 |               |                                          |
+                 |                                  |                 |               |                                          |
+
+
+
