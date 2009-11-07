@@ -8,6 +8,17 @@
 
     Jet.global = this;
 
+    Jet.version = {
+        release: 2,              //  The release, eg, in 1.5.6beta, this would be 1.
+        major: 0,                //  The major release, eg, in 1.5.6beta, this would be 5.
+        minor: 0,                //  The minor release, eg, in 1.5.6beta, this would be 6.
+        flag: "experimental",           //  The release flag, eg, in 1.5.6beta, this would be 'beta'.
+        build: "%build%",
+        toString: function(){
+            return [this.release, ".", this.major, ".", this.minor, ' ', this.flag, (this.build != '%build%' ? " Build "+this.build : '')].join('');
+        }
+    };
+
     Jet._mixin = function(obj, props){
         // so we don't copy Object.prototype methods.
         var tobj = {};
@@ -28,10 +39,11 @@
         return obj;
     };
 
-    Jet.config = Jet.config || {};
-    Jet.mixin({
 
-    }, Jet.config);
+
+
+    Jet.config = Jet.config || {};
+    Jet.mixin({}, Jet.config);
 
     Jet.mixin(Jet, {
         _toArray: function(source){

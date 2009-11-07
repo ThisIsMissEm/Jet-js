@@ -2,13 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>Welcome to Jet!</title>
-<!--  	<script type="application/x-javascript" src="../Testa.a.x.js"></script>
-	<script type="text/javascript" src="../Jet.js"></script>
-
-	<script type="application/javascript" src="../Test.a.js"></script>-->
-	<script type="text/javascript" src="../Jet.v2.js"></script>
-	<!--
-	<script type="text/javascript" src="../../dist/Jet.js"></script>
+<script type="text/javascript" src="../Jet.js"></script>
+<!--  <script type="text/javascript" src="../../dist/Jet.js"></script>
 	<script type="text/javascript" src="../../dist/Jet.min.js"></script>
   <script type="text/javascript">
 Jet.Test.module('Jet._base').test({
@@ -32,11 +27,16 @@ Jet.Test.module('Jet._base2').test({
         "RegExp": function(){ return this.ok( RegExp)}
     }
 }).run();
-    </script>-->
+    </script> -->
 </head>
 <body>
     <h1>Welcome to Jet!</h1>
     <p>Feel free to play around in a javascript console, Jet's loaded in this page.</p>
+    <script type="text/javascript">
+      if(Jet && (Jet.version || Jet.Version)){
+        document.write("<strong>Version: </strong>"+(Jet['version'] !== undefined ? Jet.version : Jet.Version).toString());
+      }
+    </script>
 </body>
 </html>
 

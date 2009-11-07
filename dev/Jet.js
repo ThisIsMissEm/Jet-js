@@ -204,11 +204,12 @@
                         
                         try {
                             http.send(null);
-                            
                             if((http.status >= 200 && http.status < 300) || http.status == 304){
                                 try{
                                     this.Exec(";(function(Jet){"+http.responseText+"})(Jet);");
+                                    console.log("exec");
                                 } catch(e){
+                                    console.log(e);
                                     this.Stop('Jet.Require failed to execute '+ns+'; Reason: '+e);
                                 }
                                 this.uri.loaded.push(uri);
@@ -219,6 +220,10 @@
                 	}
                 }
             }
+        },
+        
+        Stop: function(){
+            throw arguments;
         },
         
         require: function(ns){
