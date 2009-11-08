@@ -16,9 +16,8 @@
 // all contributors need to sign the Dojo Foundation CLA <http://www.dojofoundation.org/about/cla/>.
 
 
-// Summary:
-//		The core functionality of Jet.js
-var Jet = this.Jet = this.Jet ? this.Jet : {};
+// Initial declaration.
+var jet = this.jet = this.jet ? this.jet : {};
 
 // Summary:
 //		If true, jet will log messages to the console to tell you 
@@ -26,21 +25,63 @@ var Jet = this.Jet = this.Jet ? this.Jet : {};
 jet.debug = true;
 
 // summary:
+//		A reference to the global scope of Jet.js.
+jet.global = this;
+
+// summary:
 //		The path to where all JavaScript files should be loaded 
 //		from. This is overwritten by {{{jet.findBasePath}}}.
 jet.basePath = '';
 
-// summary:
-//		A reference to the global scope of Jet.js.
-jet.global = this;
+//==============================================================================
+// Development Utilities:
+//==============================================================================
+
+jet.experimental = function(namespace, extra){
+	// summary: 
+	//		Marks code as experimental. (Stolen from Dojo Toolkit.)
+	// description: 
+	//		This can be used to mark a function, file, or module as
+	//		experimental.  Experimental code is not ready to be used, and the
+	//		APIs are subject to change without notice.  Experimental code may be
+	//		completed deleted without going through the normal deprecation
+	//		process.
+	// namespace: 
+	//		The name of a module, or the name of a module file or a specific
+	//		function
+	// example:
+	//	|	jet.experimental("dojo.data.Result");
+	// example:
+	//	|	jet.experimental("dojo.weather.toKelvin()", "PENDING approval from NOAA");
+	if(window["console"] && window.console["warn"] && jet.debug){
+		console.warn("EXPERIMENTAL: " + namespace + " -- APIs subject to change without notice. "+(extra ? extra : ""));
+	}
+}
+
+jet.incomplete = function(namespace, extra){
+	// summary:
+	//		Marks code as incomplete, in a similar fashion to jet.experimental();
+	// description:
+	//		See jet.experimental for details.
+	if(window["console"] && window.console["warn"] && jet.debug){
+		console.warn("INCOMPLETE: " + namespace + " -- This functionality is not yet complete, and may change without notice. "+(extra ? extra : ""));
+	}
+}
 
 
-// summary:
-//		Calculates the current path of Jet, in order to work out 
-//		where to load all other files from.
-//	tags:
-//		private
+//==============================================================================
+// The Loader
+//==============================================================================
+
+jet._provided = [];
+
 jet._findBasePath = (function(){
+	// summary:
+	//		Calculates the current path of Jet, in order to work out 
+	//		where to load all other files from.
+	//	tags:
+	//		private
+	
 	if(!jet.basePath || jet.basePath == ""){
 		var doc = jet.global.document,
 			 result = doc.location.href;
@@ -63,21 +104,52 @@ jet._findBasePath = (function(){
 	}
 })();
 
-
-// TODO:
-
-jet.getObjectByName = function(namespace){
+jet.namespace = function(/*String*/ namespace){
+	// summary:
+	//		Creates & Resolves an objects structure based on the given Namespace string.
+	// namespace:
+	//		A string representing an object tree, each level separated by a period.
+	// example:
+	//	|	jet.namespace("a.b.c");
+	//	|	#=> a = {}; a.b={}; a.b.c={};
+	// example:
+	//	|	jet.namespace("a.b").c = function(){};
+	var current = jet.global;
+	for(var node, parts = namespace.split('.'); parts.length && (node = parts.shift());){
+		current = (current[node] = (current[node] == undefined) ? {} : current[node]);
+	}
 	
+	return current;
 };
 
 jet.provide = function(namespace){
+	// summary: 
+	//		A basic way to tell Jet what code exists within a file.
+	// tags:
+	//		incomplete
+	jet.incomplete("jet.provide");
 	
+	jet.namespace(namespace);
+	jet._provided.push(namespace);
 };
+
 
 jet.require = function(namespace){
-	
+	jet.incomplete("jet.require");
+	console.log("Should load: "+namespace);
 };
 
+
+
 jet.declare = function(namespace, dependencies, methods){
+	jet.experimental("jet.declare");
 	
+	for(var dep; dependencies.length && (dep = dependencies.shift());){
+		jet.require(dep);
+	}
+
+	var parts = namespace.split("."),
+	    m = parts.pop();
+	    
+	jet.namespace(parts.join("."))[m] = methods;
 };
