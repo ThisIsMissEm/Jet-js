@@ -104,6 +104,11 @@ jet._findBasePath = (function(){
 	}
 })();
 
+jet._findPath = function(/*String*/ namespace){
+	
+	
+};
+
 jet.namespace = function(/*String*/ namespace){
 	// summary:
 	//		Creates & Resolves an objects structure based on the given Namespace string.
@@ -152,4 +157,35 @@ jet.declare = function(namespace, dependencies, methods){
 	    m = parts.pop();
 	    
 	jet.namespace(parts.join("."))[m] = methods;
+};
+
+
+
+
+//==============================================================================
+// Awesome Team Interoperability.
+//==============================================================================
+
+jet.map = function(/*String*/ target, /*String|Object*/source){
+	//	summary:
+	//		Creates and links source on to target, when target is called, 
+	//		the function passes the infomation on to the source function or object.
+	//	target:
+	//		The path of the object tree to which we want to map `source` to.
+	//	source:
+	//		The data that should be present at target, this can be either a 
+	//		function, object, or string. If it is a string, it shall be treated 
+	//		as if it is a namespace, and be followed appropriately.
+	//	example:
+	//	|	jet.require("dojo");
+	//	|	jet.map("goog.dom.query", "dojo.query");
+	//	|	// can now use goog.dom.query as if we had loaded it up using jet.require('goog.dom');
+	
+	if(typeof source == "String"){
+		source = jet.namespace(source);
+	}
+	
+	target = jet.namespace(target);
+	
+	
 };
