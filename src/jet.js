@@ -17,6 +17,7 @@
 
 
 // Initial declaration.
+var undefined = undefined;
 var jet = this.jet = this.jet ? this.jet : {};
 
 // Summary:
@@ -69,6 +70,17 @@ jet.incomplete = function(namespace, extra){
 }
 
 
+jet.mixin = function(/*Object*/ target, /*Object*/ source){
+	var tobj = {};
+	for(var x in source){
+		if(tobj[x] === undefined || tobj[x] != source[x]){
+			target[x] = source[x];
+		}
+	}
+	return target;
+}
+
+
 //==============================================================================
 // The Loader
 //==============================================================================
@@ -109,7 +121,7 @@ jet._findPath = function(/*String*/ namespace){
 	
 };
 
-jet.namespace = function(/*String*/ namespace){
+jet.namespace = function(/*String*/ namespace, /*Object?*/ properties){
 	// summary:
 	//		Creates & Resolves an objects structure based on the given Namespace string.
 	// namespace:
@@ -119,9 +131,19 @@ jet.namespace = function(/*String*/ namespace){
 	//	|	#=> a = {}; a.b={}; a.b.c={};
 	// example:
 	//	|	jet.namespace("a.b").c = function(){};
-	var current = jet.global;
+	// example:
+	// |	jet.namespace("a.b.c", function(){});
+	var current = jet.global;		 
 	for(var node, parts = namespace.split('.'); parts.length && (node = parts.shift());){
-		current = (current[node] = (current[node] == undefined) ? {} : current[node]);
+/*		if(properties && parts.length == 0){
+			if(Object.prototype.toString.call(properties) === '[object Function]'){
+				current = (current[node] = properties);
+			} else {
+				current = (current[node] = jet.mixin(current[node] || {}, properties) || {});
+			}
+		} else {*/
+			current = (current[node] = (current[node] === undefined) ? {} : current[node]);
+		/*}*/
 	}
 	
 	return current;
@@ -180,12 +202,16 @@ jet.map = function(/*String*/ target, /*String|Object*/source){
 	//	|	jet.require("dojo");
 	//	|	jet.map("goog.dom.query", "dojo.query");
 	//	|	// can now use goog.dom.query as if we had loaded it up using jet.require('goog.dom');
+	jet.experimental("jet.map");
 	
-	if(typeof source == "String"){
-		source = jet.namespace(source);
+	var current = jet.global,
+		 source = (typeof source == "string" ? jet.namespace(source) : source);
+
+	for(var node, parts = target.split('.'); parts.length && (node = parts.shift());){
+		if(parts.length == 0){
+			current = (current[node] = source);
+		} else {
+			current = (current[node] = (current[node] === undefined) ? {} : current[node]);
+		}
 	}
-	
-	target = jet.namespace(target);
-	
-	
 };
