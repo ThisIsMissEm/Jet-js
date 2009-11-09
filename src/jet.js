@@ -55,7 +55,8 @@ jet.experimental = function(namespace, extra){
 	// example:
 	// |	jet.experimental("dojo.weather.toKelvin()", "PENDING approval from NOAA");
 	if(window["console"] && window.console["warn"] && jet.debug){
-		console.warn("EXPERIMENTAL: " + namespace + " -- APIs subject to change without notice. "+(extra ? extra : ""));
+		extra = extra || "";
+		console.warn("EXPERIMENTAL: " + namespace + " -- APIs subject to change without notice. "+extra);
 	}
 }
 
@@ -65,7 +66,8 @@ jet.incomplete = function(namespace, extra){
 	// description:
 	// 	See jet.experimental for details.
 	if(window["console"] && window.console["warn"] && jet.debug){
-		console.warn("INCOMPLETE: " + namespace + " -- This functionality is not yet complete, and may change without notice. "+(extra ? extra : ""));
+		extra = extra || "";
+		console.warn("INCOMPLETE: " + namespace + " -- This functionality is not yet complete, and may change without notice. "+extra);
 	}
 }
 

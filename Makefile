@@ -16,4 +16,6 @@ jet:
 	@@echo "Jet build complete."
 	
 min: jet
-	@@java -jar ./build/shrinksafe.jar ${prefix}/jet.js > ${prefix}/jet.min.js
+	@@java -jar ./tools/shrinksafe.jar ${prefix}/jet.js > ${prefix}/jet.min.js
+	@@rm ${prefix}/jet.js
+	@@mv ${prefix}/jet.min.js ${prefix}/jet.js
